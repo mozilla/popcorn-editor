@@ -113,7 +113,7 @@ var PopcornEditor = (function () {
         "tags": ["popcorn"],
     }
     // Need to dynamically set the clipdata key
-    data.data.media.clipData[videoUrl] = {
+    data.data.media[0].clipData[videoUrl] = {
         "type": video.type,
         "title": video.title,
         "source": video.url,
