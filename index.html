@@ -3,11 +3,33 @@
   <head>
         <title>Poporn Editor embedding demo</title>
         <meta charset="utf-8">
+        <style type="text/css">
+            #toolbar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 4em;
+            }
+            #toolbar h1 {
+                display: inline-block;
+            }
+            #editor {
+                position: absolute;
+                top: 4em;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+        </style>
   </head>
   <body>
-    <h1>This is a demo</h1>
-    <button onclick="loadInfo()">Post message</button>
-    <div id="editor" style="width: 100%; height: 100%;"></div>
+    <div id="toolbar">
+        <h1>PopcornEditor</h1>
+        <button onclick="loadInfo()">Load sample project</button>
+        <a href="https://github.com/mozilla/popcorn-editor">Fork me on GitHub</a>
+    </div>
+    <div id="editor"></div>
     <script src="PopcornEditor.js"></script>
     <script>
         PopcornEditor.listen(PopcornEditor.events.save, function(message) {
