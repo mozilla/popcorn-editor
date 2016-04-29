@@ -4,7 +4,8 @@
   "description": "A fork of Web Maker's Popcorn Editor for local use.",
   "main": "gulpfile.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ws"
   },
   "repository": {
     "type": "git",
@@ -21,5 +22,8 @@
     "gulp-less": "^3.0.3",
     "gulp-rename": "^1.2.2",
     "gulp-rimraf": "^0.1.1"
+  },
+  "devDependencies": {
+    "local-web-server": "^1.2.2"
   }
 }
