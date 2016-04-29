@@ -5,12 +5,12 @@
 define( [ "core/eventmanager", "./unload-dialog", "crashreporter",
           "first-run", "./tray", "editor/ui-kit",
           "core/trackevent", "dialog/dialog",
-          "util/dragndrop", "make-api",
+          "util/dragndrop",
           "./resizeHandler", "text!../../api/butterconfig" ],
   function( EventManager, UnloadDialog, CrashReporter,
             FirstRun, Tray, UIKitDummy,
             TrackEvent, Dialog,
-            DragNDrop, Make,
+            DragNDrop,
             ResizeHandler, config ){
   config = JSON.parse(config);
 
@@ -92,69 +92,6 @@ define( [ "core/eventmanager", "./unload-dialog", "crashreporter",
       });
     };
 
-    var make = new Make({
-      apiURL: config.make_endpoint
-    });
-
-    function loadTutorials() {
-      var tutorialUrl;
-
-      if ( butter.project.publishUrl ) {
-        tutorialUrl = butter.project.publishUrl;
-      } else if ( butter.project.remixedFromUrl ) {
-        tutorialUrl = butter.project.remixedFromUrl;
-      }
-
-      make.id( butter.project.makeid ).then( function( err, results ) {
-
-        var urls = [],
-            tutorials = [],
-            tag = "";
-
-        function addNext( url ) {
-          if ( !url ) {
-            if ( tutorials.length ) {
-              butter.editor.openEditor( "tutorial-editor", {
-                openData: tutorials
-              });
-            }
-            return;
-          }
-
-          make.url( url ).then( function( err, results ) {
-            var result = results[ 0 ];
-            if ( !err ) {
-              if ( result ) {
-                tutorials.push({
-                  url: result.url + "?details=hidden",
-                  title: result.title || result.url
-                });
-              } else {
-                tutorials.push({
-                  url: url,
-                  title: url
-                });
-              }
-            }
-            addNext( urls.pop() );
-          });
-        }
-
-        if ( err || !results.length ) {
-          return;
-        }
-
-        for ( var i = 0; i < results[ 0 ].tags.length; i++ ) {
-          tag = results[ 0 ].tags[ i ];
-          if ( tag.indexOf( "tutorial-" ) === 0 ) {
-            urls.push( decodeURIComponent( tag.replace( "tutorial-", "" ) ) );
-          }
-        }
-
-        addNext( urls.pop() );
-      });
-    }
-
     this.setEditor = function( editorAreaDOMRoot ) {
       _this.editor = editorAreaDOMRoot;
       document.body.appendChild( editorAreaDOMRoot );
@@ -181,10 +118,9 @@ define( [ "core/eventmanager", "./unload-dialog", "crashreporter",
 
             // Open the media-editor editor right after butter is finished starting up
             butter.editor.openEditor( "media-editor" );
-            if ( butter.project.publishUrl ||
-                 butter.project.remixedFromUrl ) {
-              loadTutorials();
-            }
+
+            // @fixme re-integrate tutorial loading?
+
             FirstRun.init();
           }
 
