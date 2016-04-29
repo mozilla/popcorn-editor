@@ -10,12 +10,16 @@
       location: window.location,
       ready: function( butter ) {
 
-        if (typeof $ != 'undefined'  &&  $('body').hasClass('editor-open')){
-          // Switch to player mode default.
-          // Close the trays which a user can later reopen if desired.
-          $('.butter-toggle-button').click();
-          $('.butter-editor-close-btn').click();
-        }
+        var editor2player = function(){
+          if (typeof $ != 'undefined'  &&  $('body').hasClass('editor-open')){
+            // Switch to player mode default.
+            // Close the trays which a user can later reopen if desired.
+            $('.butter-toggle-button').click();
+            $('.butter-editor-close-btn').click();
+          }
+        };
+        editor2player();
+        setTimeout(editor2player, 3000); //xxxx badness -- but adding to config.json ui:{enabled:false, onLeaveDialog:true, trackEventHighlight:"click"} isnt working now..
 
         butter.listen( "mediaready", function mediaReady() {
           butter.unlisten( "mediaready", mediaReady );
