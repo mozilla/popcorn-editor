@@ -1,19 +1,12 @@
 /**
  * iframe embedding API for PopcornEditor
  *
- * @todo message handler needs to check the source object and format for security
  * @todo message handler should allow cross-site embedding for different security
- *
- * @todo allow multiple listeners
- * @todo add unlisten
- * @todo add a safe 'loaded' event
  * @todo add a way to return status/data from listeners?
  */
 var PopcornEditor = (function () {
   var PopcornEditor = {},
-      _savehandler = function () { return; },
-      listeners = {},
-      iframe;
+      listeners = {};
 
   PopcornEditor.init = function (el, url) {
     var editor = document.getElementById(el),
@@ -30,7 +23,10 @@ var PopcornEditor = (function () {
   };
 
   // List of events that PopcornEditor supports
-  PopcornEditor.events = {save: 'save', loaded: 'loaded'};
+  PopcornEditor.events = {
+    save: 'save',
+    loaded: 'loaded'
+  };
 
   /**
    * Sets the given handler as the handler for the event
@@ -39,7 +35,26 @@ var PopcornEditor = (function () {
    * @param handler : [function] takes event
    */
   PopcornEditor.listen = function (eventName, handler) {
-    listeners[eventName] = handler;
+      if (listeners[eventName] === undefined) {
+        listeners[eventName] = [handler];
+      } else {
+        listeners[eventName].push(handler);
+      }
+  }
+
+  /**
+   * Remove an event listener
+   *
+   * @param eventName : [string] name of the event (must be in events)
+   * @param handler : [function] handler to remove
+   */
+  PopcornEditor.unlisten = function (eventName, handler) {
+      if (listeners[eventName] !== undefined) {
+        var found = listeners[eventName].indexOf(handler);
+        if (found !== -1) {
+          listeners[eventName].splice(found, 1);
+        }
+      }
   }
 
   /**
@@ -135,12 +150,17 @@ var PopcornEditor = (function () {
   };
 
   window.addEventListener('message', function (e) {
-    if (e.origin !== window.location.origin)
+    if (e.source !== PopcornEditor.iframe.contentWindow) {
       return;
-
+    }
+    if (e.origin !== window.location.origin) {
+      return;
+    }
     for (key in listeners) {
       if (e.data.type === key) {
-        listeners[key](e.data.data);
+        listeners[key].forEach(function(handler) {
+            handler(e.data.data);
+        });
       }
     }
   });
