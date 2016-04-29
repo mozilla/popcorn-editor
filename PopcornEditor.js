@@ -1,3 +1,14 @@
+/**
+ * iframe embedding API for PopcornEditor
+ *
+ * @todo message handler needs to check the source object and format for security
+ * @todo message handler should allow cross-site embedding for different security
+ *
+ * @todo allow multiple listeners
+ * @todo add unlisten
+ * @todo add a safe 'loaded' event
+ * @todo add a way to return status/data from listeners?
+ */
 var PopcornEditor = (function () {
   var PopcornEditor = {},
       _savehandler = function () { return; },
