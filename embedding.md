@@ -9,33 +9,35 @@ site loads the embedding API from `PopcornEditor.js` and instantiates an
 iframe:
 
 ```
-PopcornEditor.listen(PopcornEditor.events.loaded, function () {
+var popcorn = new PopcornEditor();
+
+popcorn.listen(PopcornEditor.events.loaded, function () {
   // Event triggered when the editor is finished loading.
   // This is a good time to hide a spinner, or load initial project data.
 });
 
-PopcornEditor.listen(PopcornEditor.events.save, function(data) {
+popcorn.listen(PopcornEditor.events.save, function(data) {
   // The project 'Save' button was pushed in the editor, requesting
   // that the hosting site save it in some way.
   saveSomething(data);
 });
 
-PopcornEditor.init('editor');
+popcorn.init('editor');
 ```
-
-TODO: turn into a proper class that can be instantiated/released.
 
 # Events
 
 Events sent from PopcornEditor to the host page may be received by passing
-the event name and a handler function to `PopcornEditor.listen`.
+the event name and a handler function to `listen()`.
 
-A specific event handler may be similarly removed  with `PopcornEditor.unlisten`.
+A specific event handler may be similarly removed  with `unlisten()`.
 
 ```
-  PopcornEditor.listen(PopcornEditor.events.save, this._onsave);
-  PopcornEditor.unlisten(PopcornEditor.events.save, this._onsave);
+  popcorn.listen(PopcornEditor.events.save, this._onsave);
+  popcorn.unlisten(PopcornEditor.events.save, this._onsave);
 ```
+
+TODO: define the `this` value for event callbacks.
 
 ## loaded
 
@@ -57,6 +59,10 @@ a dialog asking for name, tags, etc.
 TODO: on completion, call a response method.
 
 # Methods
+
+## close
+
+Removes the iframe from the document and releases all event handlers.
 
 ## createTemplate
 

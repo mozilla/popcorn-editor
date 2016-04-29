@@ -4,13 +4,15 @@
  * @todo message handler should allow cross-site embedding for different security
  * @todo add a way to return status/data from listeners?
  */
-var PopcornEditor = (function () {
-  var PopcornEditor = {},
+function PopcornEditor() {
+  var self = this,
       listeners = {};
 
-  PopcornEditor.init = function (el, url) {
+  this.init = function (el, url) {
     var editor = document.getElementById(el),
         url = url || 'PopcornEditor/editor.html';
+
+    window.addEventListener('message', onmessage);
 
     this.iframe = document.createElement('iframe'),
 
@@ -22,10 +24,13 @@ var PopcornEditor = (function () {
     editor.appendChild(this.iframe);
   };
 
-  // List of events that PopcornEditor supports
-  PopcornEditor.events = {
-    save: 'save',
-    loaded: 'loaded'
+  this.close = function () {
+      window.removeEventListener('message', onmessage);
+      this.iframe.parent.removeChild(this.iframe);
+      this.iframe = null;
+      for (key in listeners) {
+          delete listeners[key];
+      }
   };
 
   /**
@@ -34,7 +39,7 @@ var PopcornEditor = (function () {
    * @param eventName : [string] name of the event (must be in events)
    * @param handler : [function] takes event
    */
-  PopcornEditor.listen = function (eventName, handler) {
+  this.listen = function (eventName, handler) {
       if (listeners[eventName] === undefined) {
         listeners[eventName] = [handler];
       } else {
@@ -48,7 +53,7 @@ var PopcornEditor = (function () {
    * @param eventName : [string] name of the event (must be in events)
    * @param handler : [function] handler to remove
    */
-  PopcornEditor.unlisten = function (eventName, handler) {
+  this.unlisten = function (eventName, handler) {
       if (listeners[eventName] !== undefined) {
         var found = listeners[eventName].indexOf(handler);
         if (found !== -1) {
@@ -62,7 +67,7 @@ var PopcornEditor = (function () {
    *
    * @param data : [object] json object
    */
-  PopcornEditor.loadInfo = function (data) {
+  this.loadInfo = function (data) {
       this.iframe.contentWindow.postMessage({
          data: data,
          type: 'load'
@@ -75,7 +80,7 @@ var PopcornEditor = (function () {
    *
    * @param video : javascript object of video
    */
-  PopcornEditor.createTemplate = function (video) {
+  this.createTemplate = function (video) {
     var videoUrl = video.url;
     data = {
         "template": "basic",
@@ -149,8 +154,8 @@ var PopcornEditor = (function () {
     return data;
   };
 
-  window.addEventListener('message', function (e) {
-    if (e.source !== PopcornEditor.iframe.contentWindow) {
+  function onmessage (e) {
+    if (e.source !== self.iframe.contentWindow) {
       return;
     }
     if (e.origin !== window.location.origin) {
@@ -163,7 +168,12 @@ var PopcornEditor = (function () {
         });
       }
     }
-  });
+  }
 
-  return PopcornEditor;
-})();
+}
+
+// List of events that PopcornEditor supports
+PopcornEditor.events = {
+  save: 'save',
+  loaded: 'loaded'
+};
