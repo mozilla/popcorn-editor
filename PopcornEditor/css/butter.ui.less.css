@@ -13692,10 +13692,8 @@ a.make.active {
     padding: 5px 30px;
   }
 }
-.modal-content .modal-body label[for=webmaker-login-email],
 .modal-content .modal-body label[for=uid],
 .modal-content .modal-body label[for=key],
-.modal-content .modal-body label[for=persona-username],
 .modal-content .modal-body label[for=password],
 .modal-content .modal-body label[for=value],
 .modal-content .modal-body label[for=confirmValue] {
@@ -13705,10 +13703,8 @@ a.make.active {
   font-weight: 600;
 }
 @media (min-width: 480px) {
-  .modal-content .modal-body label[for=webmaker-login-email],
   .modal-content .modal-body label[for=uid],
   .modal-content .modal-body label[for=key],
-  .modal-content .modal-body label[for=persona-username],
   .modal-content .modal-body label[for=password],
   .modal-content .modal-body label[for=value],
   .modal-content .modal-body label[for=confirmValue] {
