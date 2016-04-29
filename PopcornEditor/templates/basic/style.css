@@ -11,7 +11,7 @@
    ========================================================================== */
 .wrapper {
   border: 15px solid #FFF;
-  box-shadow: 0 0 0 1px #cccccc, 0 25px 5px -20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 1px #CCC, 0 25px 5px -20px rgba(0, 0, 0, 0.5);
 }
 /* body-wrapper required to circumvent this bug in webkit: https://bugs.webkit.org/show_bug.cgi?id=77811 */
 .body-wrapper {
