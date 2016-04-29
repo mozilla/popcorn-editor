@@ -58,19 +58,6 @@ TODO: on completion, call a response method.
 
 # Methods
 
-## loadInfo
-
-Sends project JSON data into the embedded editor, to be displayed and modified.
-See also `createTemplate()` for a convenient way to fill out a project template.
-
-```
-PopcornEditor.loadInfo(projectData);
-```
-
-TODO: when loading is complete, send an event back.
-
-TODO: provide a spec to the data format.
-
 ## createTemplate
 
 Parameters:
@@ -104,6 +91,9 @@ Parameters:
 Attaches an event listener for the given event key.
 
 ## loadInfo
+
+Sends project JSON data into the embedded editor, to be displayed and modified.
+See also `createTemplate()` for a convenient way to fill out a project template.
 
 Parameters:
 * data [object] - project JSON data
