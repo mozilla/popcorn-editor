@@ -83,7 +83,7 @@ To actually load it into the editor, pass through to `loadInfo()`.
 ## init
 
 Parameters:
-* element [string] - element id to append the iframe into.
+* element [HTMLElement|string] - element or id to append the iframe into.
 * url [string] - optional URL; defaults to 'PopcornEditor/editor.html'
 
 Sets up the iframe and starts it loading.

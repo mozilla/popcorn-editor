@@ -9,7 +9,7 @@ function PopcornEditor() {
       listeners = {};
 
   this.init = function (el, url) {
-    var editor = document.getElementById(el),
+    var editor = (typeof el === 'string') ? document.getElementById(el) : el,
         url = url || 'PopcornEditor/editor.html';
 
     window.addEventListener('message', onmessage);
