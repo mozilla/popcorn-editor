@@ -43,7 +43,6 @@ requirejs.config({
     "list": "../static/bower/listjs/dist/list.min",
     "fuzzySearch": "../static/bower/list.fuzzysearch.js/dist/list.fuzzysearch.min",
     "selectize": "../static/bower/selectize/dist/js/standalone/selectize.min",
-    "make-api": "../external/make-api",
     "sketchfab-iframe": "../external/sketchfab/sketchfab-iframe",
     "WebmakerUI": "../static/bower/webmaker-ui/ui",
     "webmaker-ui-fragments": "../static/bower/webmaker-ui/webmaker-ui-fragments",
