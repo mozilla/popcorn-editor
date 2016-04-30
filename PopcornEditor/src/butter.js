@@ -967,77 +967,93 @@ window.Butter = {
           return initialMediaList;
         }
 
+        function loadInitialMediaSourcesData( savedData, datas )
+        {
+          var track = false;
+          var trackTime = 0;
+          var media = savedData.media[ 0 ];
+          if (media){
+            media.duration = 0;
+            track = media.tracks[ 0 ];
+
+            $(datas).each(function(idx, data){
+              _logger.log('loadInitialMediaSourcesData('+idx+')');
+              if (data === null)
+                return true; // logical continue
+
+              media.url = "#t=," + data.duration;
+              media.duration += data.duration;
+
+              if ( track ) {
+                track.trackEvents.push({
+                  id: "TrackEvent"+idx,
+                  type: "sequencer",
+                  popcornOptions: {
+                    source: [ data.source ],
+                    start: trackTime,
+                    end: trackTime + data.duration,
+                    title: data.title,
+                    from: data.from,
+                    duration: data.duration,
+                    target: "video-container",
+                    fallback: "",
+                    zindex: 1000,
+                    id: "TrackEvent"+idx,
+                    linkback: data.linkback,
+                    thumbnailSrc: data.thumbnail
+                  }
+                });
+                trackTime += data.duration;
+
+                media.clipData = media.clipData || {};
+
+                // Don't forget to add the clip data!
+                if ( !media.clipData[ data.source ] ) {
+                  media.clipData[ data.source ] = data;
+                }
+              }//end if ( track )
+            });//end .each()
+          }
+
+          projectDataReady( savedData );
+        }
+
         function loadConfigDefault() {
           // if previous attempt failed,
           // try loading data from the savedDataUrl value in the config
           loadFromSavedDataUrl( _config.value( "savedDataUrl" ), function( savedData ) {
-            var trackTime=0;
-
             var initialMediaList = initialMediaSources( qs );
 
             if ( !initialMediaList.length ) {
               return projectDataReady( savedData );
             }
 
-            var media = savedData.media[ 0 ];
-            if (media)
-              media.duration = 0;
+            // We need to preserve the order of the wanted initial sources
+            // since they can "arrive" below asynchronously and thus out of order
+            var datas = Array(initialMediaList.length).fill(null);
 
             var num2get = initialMediaList.length;
-            $(initialMediaList).each(function(idx,initialMediaSource){
+            $(initialMediaList).each(function(idx, initialMediaSource){
               // If we successfully retrieve data for that initial media we will hand write it
               // into the default project data before the import.
-              // xxxx 2+ media is race condition adding now!
 
-              MediaUtil.getMetaData( initialMediaSource, function onSuccess( data ) {
-                var media = savedData.media[ 0 ],
-                    track;
+              MediaUtil.getMetaData(
+                initialMediaSource,
+                function onSuccess( data ) {
+                  _logger.log('GOT['+idx+']: '+initialMediaSource);
 
-                if ( media ) {
-                  media.url = "#t=," + data.duration;
-                  media.duration += data.duration;
+                  datas[ idx ] = data;
 
-                  track = media.tracks[ 0 ];
-
-                  if ( track ) {
-                    track.trackEvents.push({
-                      id: "TrackEvent"+idx,
-                      type: "sequencer",
-                      popcornOptions: {
-                        source: [ data.source ],
-                        start: trackTime,
-                        end: trackTime + data.duration,
-                        title: data.title,
-                        from: data.from,
-                        duration: data.duration,
-                        target: "video-container",
-                        fallback: "",
-                        zindex: 1000,
-                        id: "TrackEvent"+idx,
-                        linkback: data.linkback,
-                        thumbnailSrc: data.thumbnail
-                      }
-                    });
-                    trackTime += data.duration;
-
-                    media.clipData = media.clipData || {};
-
-                    // Don't forget to add the clip data!
-                    if ( !media.clipData[ data.source ] ) {
-                      media.clipData[ data.source ] = data;
-                    }
+                  if ( (--num2get) == 0 ) {
+                    loadInitialMediaSourcesData( savedData, datas );
                   }
-                }
-
-                if ( ! --num2get ) {
-                  projectDataReady( savedData ); //xxxx 2+ media is race condition adding now!
-                }
-              }, // end onSuccess()
-              function onError() {
-                if ( ! --num2get ) {
-                  projectDataReady( savedData );
-                }
-              }); // end getMetaData()
+                },
+                function onError() {
+                  _logger.log('ERR['+idx+']: '+initialMediaSource);
+                  if ( (--num2get) == 0 ) {
+                    loadInitialMediaSourcesData( savedData, datas );
+                  }
+                }); // end getMetaData()
             });// end .each()
           });
         }
