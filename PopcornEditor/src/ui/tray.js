@@ -135,7 +135,8 @@ define( [ "util/lang",  "./logo-spinner", "./resizeHandler", "./toggler",
       trayRoot.classList.add( "butter-tray-transitions" );
       butter.unlisten( "mediaready", onMediaReady );
       toggleLoadingSpinner( false );
-      minimize( false );
+      if (butter.config.value( "ui" )['player'] === undefined)
+        minimize( false ); // not player mode -- show the editor
       _toggler.visible = true;
     });
   };
