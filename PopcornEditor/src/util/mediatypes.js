@@ -25,7 +25,7 @@ define( [ "util/uri", "util/xhr", "json!../../api/butterconfig", "jquery" ],
       YOUTUBE_EMBED_PRIVATE = "Private Video",
       ARCHIVE_EMBED_DISABLED = "Embedding of this Archive item is not available yet",
       EMBED_UNPLAYABLE = "This media source is unplayable",
-      CLYP_EMBED_UNPLAYABLE = "This Clyp source is unplayable"
+      CLYP_EMBED_UNPLAYABLE = "This Clyp source is unplayable",
       SOUNDCLOUD_EMBED_UNPLAYABLE = "This SoundCloud source is unplayable",
       SOUNDCLOUD_EMBED_DISABLED = "Embedding of this SoundCloud audio source is disabled",
       WIKIMEDIA_EMBED_UNPLAYABLE = "This Wikimedia Commons video is unplayable";
