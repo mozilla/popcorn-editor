@@ -117,7 +117,8 @@ define( [ "core/eventmanager", "./unload-dialog", "crashreporter",
             butter.unlisten( "mediaready", firstRunInit );
 
             // Open the media-editor editor right after butter is finished starting up
-            butter.editor.openEditor( "media-editor" );
+            if (butter.config.value( "ui" )['player'] === undefined)
+              butter.editor.openEditor( "media-editor" );
 
             // @fixme re-integrate tutorial loading?
 

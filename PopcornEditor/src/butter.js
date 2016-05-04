@@ -871,8 +871,8 @@ window.Butter = {
             remixOrEdit = "",
             item = [],
             project = new Project( _this ),
-            parsedUri = URI.parse( window.location ),
-            qs = parsedUri.queryKey;
+            parsedUri = URI.parse( butterOptions.location ? butterOptions.location : '');
+        var qs = parsedUri.queryKey;
 
         // see if savedDataUrl is in the page's query string
         // using query string here is kept for backwards comp
@@ -922,66 +922,142 @@ window.Butter = {
           finishedCallback( project );
         }
 
+        function initialMediaSources( qs ){
+          // special CGI args can be passed to popcorn to auto import media(s), eg:
+          //   ?initialMedia=...
+            //   ?q=...
+          var initialMediaList=[];
+
+          if ( !qs.initialMedia  &&  !qs.q ){
+            return initialMediaList;
+          }
+
+          var initialMediaSource = decodeURIComponent( qs.initialMedia || qs.q );
+
+          // if it looks like a single full media reference, use that
+          // else split up multiple media pieces from archive.org
+          if (initialMediaSource.match(/https*:\/\//)){
+            initialMediaList = [initialMediaSource];
+          }
+          else{
+            $(initialMediaSource.split(',')).each(function(idx, initialMediaSource){
+              if (!initialMediaSource.match(/https*:\/\//)){
+                var mat;
+                var post='';
+                // look for media start/end suffix patterns
+                if ((mat = initialMediaSource.match(/\/t=([\d\.]+)\/([\d\.]+)$/))){
+                  post += '?start='+mat[1]+'&end='+mat[2];
+                  initialMediaSource = initialMediaSource.replace(/\/t=([\d\.]+)\/([\d\.]+)$/,'');
+                }
+                // look for media start suffix patterns
+                else if ((mat = initialMediaSource.match(/\/t=([\d\.]+)$/))){
+                  post += '?start='+mat[1];
+                  initialMediaSource = initialMediaSource.replace(/\/t=([\d\.]+)$/,'');
+                }
+
+                // now expand the "short" source version to the full version
+                initialMediaSource = 'https://archive.org/details/' + initialMediaSource + post;
+              }
+
+              _logger.log('ADDING initialMediaSource: '+initialMediaSource);
+              initialMediaList.push(initialMediaSource);
+            });
+          }
+
+          return initialMediaList;
+        }
+
+        function loadInitialMediaSourcesData( savedData, datas )
+        {
+          var track = false;
+          var trackTime = 0;
+          var media = savedData.media[ 0 ];
+          if (media){
+            media.duration = 0;
+            track = media.tracks[ 0 ];
+
+            $(datas).each(function(idx, data){
+              _logger.log('loadInitialMediaSourcesData('+idx+')');
+              if (data === null)
+                return true; // logical continue
+
+              media.url = "#t=," + data.duration;
+              media.duration += data.duration;
+
+              if ( track ) {
+                track.trackEvents.push({
+                  id: "TrackEvent"+idx,
+                  type: "sequencer",
+                  popcornOptions: {
+                    source: [ data.source ],
+                    start: trackTime,
+                    end: trackTime + data.duration,
+                    title: data.title,
+                    from: data.from,
+                    duration: data.duration,
+                    target: "video-container",
+                    fallback: "",
+                    zindex: 1000,
+                    id: "TrackEvent"+idx,
+                    linkback: data.linkback,
+                    thumbnailSrc: data.thumbnail
+                  }
+                });
+                trackTime += data.duration;
+
+                media.clipData = media.clipData || {};
+
+                // Don't forget to add the clip data!
+                if ( !media.clipData[ data.source ] ) {
+                  media.clipData[ data.source ] = data;
+                }
+              }//end if ( track )
+            });//end .each()
+          }
+
+          projectDataReady( savedData );
+        }
+
         function loadConfigDefault() {
           // if previous attempt failed,
           // try loading data from the savedDataUrl value in the config
           loadFromSavedDataUrl( _config.value( "savedDataUrl" ), function( savedData ) {
-            var initialMediaSource;
+            var initialMediaList = initialMediaSources( qs );
 
-            if ( !qs.initialMedia ) {
+            if ( !initialMediaList.length ) {
               return projectDataReady( savedData );
             }
 
-            initialMediaSource = decodeURIComponent( qs.initialMedia );
+            // We need to preserve the order of the wanted initial sources
+            // since they can "arrive" below asynchronously and thus out of order
+            var datas = Array(initialMediaList.length).fill(null);
 
-            // If we successfully retrieve data for that initial media we will hand write it
-            // into the default project data before the import.
-            MediaUtil.getMetaData( initialMediaSource, function onSuccess( data ) {
-              var media = savedData.media[ 0 ],
-                  track;
+            var num2get = initialMediaList.length;
+            $(initialMediaList).each(function(idx, initialMediaSource){
+              // If we successfully retrieve data for that initial media we will hand write it
+              // into the default project data before the import.
 
-              if ( media ) {
-                media.url = "#t=," + data.duration;
-                media.duration = data.duration;
+              MediaUtil.getMetaData(
+                initialMediaSource,
+                function onSuccess( data ) {
+                  _logger.log('GOT['+idx+']: '+initialMediaSource);
 
-                track = media.tracks[ 0 ];
+                  datas[ idx ] = data;
 
-                if ( track ) {
-                  track.trackEvents.push({
-                    id: "TrackEvent1",
-                    type: "sequencer",
-                    popcornOptions: {
-                      source: [ data.source ],
-                      start: 0,
-                      end: data.duration,
-                      title: data.title,
-                      from: data.from,
-                      duration: data.duration,
-                      target: "video-container",
-                      fallback: "",
-                      zindex: 1000,
-                      id: "TrackEvent1",
-                      linkback: data.linkback,
-                      thumbnailSrc: data.thumbnail
-                    }
-                  });
-
-                  media.clipData = media.clipData || {};
-
-                  // Don't forget to add the clip data!
-                  if ( !media.clipData[ data.source ] ) {
-                    media.clipData[ data.source ] = data;
+                  if ( (--num2get) == 0 ) {
+                    loadInitialMediaSourcesData( savedData, datas );
                   }
-
-                  projectDataReady( savedData );
-                }
-              }
-            },
-            function onError() {
-              projectDataReady( savedData );
-            });
+                },
+                function onError() {
+                  _logger.log('ERR['+idx+']: '+initialMediaSource);
+                  if ( (--num2get) == 0 ) {
+                    loadInitialMediaSourcesData( savedData, datas );
+                  }
+                }); // end getMetaData()
+            });// end .each()
           });
         }
+
 
         // attempt to load data from savedDataUrl in query string
         loadFromSavedDataUrl( savedDataUrl, function( savedData ) {

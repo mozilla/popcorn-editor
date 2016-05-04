@@ -91,7 +91,8 @@ define( [ "util/lang",  "./logo-spinner", "./resizeHandler", "./toggler",
     this.setMediaInstance = function( mediaInstanceRootElement ) {
       var timelineContainer = timelineArea.querySelector( ".butter-timeline" );
       LangUtils.applyTransitionEndListener( trayRoot, butter.timeline.media.verticalResize );
-      stageWrapper.style.bottom = trayHeight + "px";
+      if (butter.config.value( "ui" )['player'] === undefined)
+        stageWrapper.style.bottom = trayHeight + "px";
       timelineContainer.innerHTML = "";
       timelineContainer.appendChild( mediaInstanceRootElement );
     };
@@ -135,7 +136,8 @@ define( [ "util/lang",  "./logo-spinner", "./resizeHandler", "./toggler",
       trayRoot.classList.add( "butter-tray-transitions" );
       butter.unlisten( "mediaready", onMediaReady );
       toggleLoadingSpinner( false );
-      minimize( false );
+      if (butter.config.value( "ui" )['player'] === undefined)
+        minimize( false ); // not player mode -- show the editor
       _toggler.visible = true;
     });
   };
