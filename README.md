@@ -124,7 +124,7 @@ $ npm install
 $ gulp
 ```
 
-CND Hosting
+CDN Hosting
 ===========
 
 All successful [Travis builds](https://travis-ci.org/mozilla/popcorn-editor) 
