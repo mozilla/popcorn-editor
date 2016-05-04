@@ -56,6 +56,5 @@ function() {
         listeners[eventName].push(handler);
       }
     }
-  }
+  };
 });
-
