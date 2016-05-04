@@ -575,7 +575,7 @@ define( [ "core/eventmanager", "./unload-dialog", "crashreporter",
     butter.listen( "ready", function(){
       _resizeHandler = new ResizeHandler( { margin: 26, border: 15 } ),
       _resizeHandler.resize();
-      window.addEventListener( "resize", _resizeHandler.resizee );
+      window.addEventListener( "resize", _resizeHandler.resize );
     });
 
     butter.listen( "mediaready", bindKeyDownListener );
