@@ -91,7 +91,8 @@ define( [ "util/lang",  "./logo-spinner", "./resizeHandler", "./toggler",
     this.setMediaInstance = function( mediaInstanceRootElement ) {
       var timelineContainer = timelineArea.querySelector( ".butter-timeline" );
       LangUtils.applyTransitionEndListener( trayRoot, butter.timeline.media.verticalResize );
-      stageWrapper.style.bottom = trayHeight + "px";
+      if (butter.config.value( "ui" )['player'] === undefined)
+        stageWrapper.style.bottom = trayHeight + "px";
       timelineContainer.innerHTML = "";
       timelineContainer.appendChild( mediaInstanceRootElement );
     };
