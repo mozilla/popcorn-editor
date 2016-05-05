@@ -2,7 +2,7 @@
  * If a copy of the MIT license was not distributed with this file, you can
  * obtain one at https://raw.github.com/mozilla/butter/master/LICENSE */
 
-define( [ "util/lang", "util/time", "analytics", "text!../layouts/controls.html" ],
+define( [ "util/lang", "util/time", "analytics", "text!../../layouts/controls.html" ],
   function( LangUtils, Time, analytics, CONTROLS_LAYOUT ) {
 
   function Controls( container, options ) {
