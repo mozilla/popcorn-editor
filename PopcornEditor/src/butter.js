@@ -883,8 +883,20 @@ window.Butter = {
           }
         });
 
+
+        // the savedDataUrl can be used with a fully-qualified url to the location of
+        // the project JSON file, including off-site project file references
+        var fullUrl = false;
+        if ( savedDataUrl && savedDataUrl.indexOf("http")===0 ) {
+          var savedDataUrl2 = decodeURIComponent( savedDataUrl );
+          if ( savedDataUrl2.indexOf("https://")===0  ||  savedDataUrl2.indexOf("http://")===0 ){
+            savedDataUrl = savedDataUrl2;
+            fullUrl = true;
+          }
+        }
+
         // Backwards compat for urls loaded as <HOSTNAME>/templates/basic/?savedDataUrl=someConfig.json
-        if ( savedDataUrl && savedDataUrl.indexOf( "/api/" ) === -1 ) {
+        if ( savedDataUrl && !fullUrl && savedDataUrl.indexOf( "/api/" ) === -1 ) {
           savedDataUrl = "/templates/basic/" + savedDataUrl;
         }
 
