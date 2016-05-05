@@ -366,13 +366,13 @@ function init() {
   }
 
   var require = requirejs.config({
-    baseUrl: "/src",
+    baseUrl: "./src",
     paths: {
       "json": "../external/require/json",
       "text": "../external/require/text",
-      "analytics": "/static/bower/webmaker-analytics/analytics",
-      "jquery": "/static/bower/jquery/dist/jquery.min",
-      "ua-parser": "/static/bower/ua-parser-js/src/ua-parser.min"
+      "analytics": "../static/bower/webmaker-analytics/analytics",
+      "jquery":    "../static/bower/jquery/dist/jquery.min",
+      "ua-parser": "../static/bower/ua-parser-js/src/ua-parser.min"
     }
   });
 
@@ -418,6 +418,8 @@ function init() {
        *   loop       = 1|0{default}    whether to loop when hitting the end
        *   showinfo   = 1{default}|0    whether to show video title, author, etc. before playing
        *   preload    = auto{default}|none    whether to preload the video, or wait for user action
+       *   debug      = 1|{default}0    whether to show some debug info via console.log()
+       *  savedDataUrl= {url}|none      a full project JSON file reference to preload into player
        **/
       config = {
         autohide: qs.autohide === "1" ? true : false,
@@ -446,11 +448,32 @@ function init() {
         }( document )),
         loop: qs.loop === "1" ? true : false,
         branding: qs.branding === "0" ? false : true,
-        showinfo: qs.showinfo === "0" ? false : true
+        showinfo: qs.showinfo === "0" ? false : true,
+        savedDataUrl: qs.savedDataUrl === "" ? false : qs.savedDataUrl,
+        debug: qs.debug|0
       };
+
+      if ( config.savedDataUrl  &&  config.savedDataUrl.indexOf('http')===0  &&  !config.savedDataUrl.match( /https*:\/\// ) ){
+        // prolly url encoded good citizen!  decode it
+        config.savedDataUrl = decodeURIComponent( config.savedDataUrl );
+      }
+
 
       resizeHandler.resize();
       window.addEventListener( "resize", resizeHandler.resize );
+
+      var home = location.href.replace(/\/embed\.html.*/, '/');
+
+      var json = '';
+      if ( !config.savedDataUrl ) {
+        config.savedDataUrl = home + 'templates/basic/projects/archive.json';
+      }
+
+      // do a BLOCKING ajax load of the project JSON
+      config.debug  &&  console.log( 'savedDataUrl:', config.savedDataUrl );
+      jQuery.ajax({url: config.savedDataUrl,
+                   async: false,
+                   success:function( resp ){ json = resp; }});
 
       Controls.create( "controls", {
         onShareClick: function() {
@@ -463,9 +486,37 @@ function init() {
           fullscreenClick();
         },
         init: function( setPopcorn ) {
-          // writes out the Popcorn initialization code as popcornDataFn()
-          window.popcornDataFn();
+          config.debug  &&  console.log( json );
+
+          jQuery( "#attribution-details .attribution-title, .embed-title" ).text( json.name );
+
+          if ( json.description ) {
+            jQuery( "#post-roll .post-roll-description" ).prepend( json.description );
+          }
+
+          if ( json.author ) {
+            jQuery( "#post-roll .embed-author, #share .embed-author, #attribution-details .attribution-author" ).prepend( json.author );
+          }
+
+          jQuery( '#remix-post' ).attr( 'href', home + 'editor.html?savedDataUrl=' + encodeURIComponent( config.savedDataUrl ));
+
+          // now move the JSON project into a new Popcorn instance
+          popcorn = Popcorn.smart('#container', [ '#t=,' + json.media[0].duration ], {"frameAnimation": true,
+                                                                                      "id": "Butter-Generated"});
+          jQuery( json.media[0].tracks ).each( function( trackN, currentTrack ){ //xxxp [0]
+            jQuery( currentTrack.trackEvents ).each( function( idx, val ){
+              config.debug  &&  console.log( val );
+              /**/ if (val.type == 'sequencer'){ popcorn.sequencer( val.popcornOptions ); }
+              else if (val.type == 'image'    ){ popcorn.image(     val.popcornOptions ); }
+              else if (val.type == 'text'     ){ popcorn.text(      val.popcornOptions ); }
+              else{
+                alert( 'warning: skipping unsupported project track event of type: ' + val.type ); //xxxp
+              }
+            });
+          });
+
           popcorn = Popcorn.byId( "Butter-Generated" );
+
           setPopcorn( popcorn );
           // Always show controls.  See #2284 and #2298 on supporting
           // options.controls, options.autohide.
@@ -680,7 +731,7 @@ document.addEventListener( "DOMContentLoaded", function() {
     rscript.onload = function() {
       init();
     };
-    rscript.src = "/external/require/require.js";
+    rscript.src = "external/require/require.js";
     document.head.appendChild( rscript );
   } else {
     init();
