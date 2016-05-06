@@ -469,7 +469,7 @@ function init() {
         config.savedDataUrl = home + 'templates/basic/projects/archive.json';
       }
 
-      // do a BLOCKING ajax load of the project JSON
+      // do a BLOCKING ajax load of the project JSON xxxp
       config.debug  &&  console.log( 'savedDataUrl:', config.savedDataUrl );
       jQuery.ajax({url: config.savedDataUrl,
                    async: false,
@@ -501,6 +501,8 @@ function init() {
           jQuery( '#remix-post' ).attr( 'href', home + 'editor.html?savedDataUrl=' + encodeURIComponent( config.savedDataUrl ));
 
           // now move the JSON project into a new Popcorn instance
+          // and grab a video thumbnail or image thumbnail for the "click to play"
+          var clickThumb = null, clickImg = null;
           popcorn = Popcorn.smart('#container', [ '#t=,' + json.media[0].duration ], {"frameAnimation": true,
                                                                                       "id": "Butter-Generated"});
           jQuery( json.media[0].tracks ).each( function( trackN, currentTrack ){ //xxxp [0]
@@ -512,8 +514,21 @@ function init() {
               else{
                 alert( 'warning: skipping unsupported project track event of type: ' + val.type ); //xxxp
               }
+              if ( clickThumb===null  &&  val.popcornOptions.thumbnailSrc ) {
+                clickThumb = val.popcornOptions.thumbnailSrc;
+              }
+              if ( clickImg===null  &&  val.type=='image'  &&  val.popcornOptions.src ) {
+                clickImg = val.popcornOptions.src;
+              }
             });
           });
+
+          if ( clickThumb === null ) {
+            clickThumb = clickImg;
+          }
+          if ( clickThumb !== null ) {
+            jQuery( "#thumbnail-container" ).css( 'background-color','black' ).html( '<img style="display:block; width:100%; height:100%; object-fit:contain;" src="'+clickThumb+'"/>' ); //xxxp bg black
+          }
 
           popcorn = Popcorn.byId( "Butter-Generated" );
 
