@@ -408,7 +408,15 @@ function init() {
           container = document.querySelectorAll( ".container" )[ 0 ];
 
       /**
-       * the embed can be configured via the query string:
+       * The embed can be configured via the query string:
+       *  savedDataUrl= {url}|none
+        *     A full project JSON file reference to preload into player.
+       *      NOTE: savedDataUrl is effectively required to show a project.
+       *      JSON file references may be fully or locally qualified.
+       *      Examples:
+       *        savedDataUrl=templates/basic/projects/stop-and-frisk.json
+       *        savedDataUrl=https://archive.org/services/maker.php?edl=Tracey_pooh-politicalAdscheckPlease
+       *
        *   autohide   = 1{default}|0    automatically hide the controls once playing begins
        *   autoplay   = 1|{default}0    automatically play the video on load
        *   controls   = 1{default}|0    display controls
@@ -419,7 +427,6 @@ function init() {
        *   showinfo   = 1{default}|0    whether to show video title, author, etc. before playing
        *   preload    = auto{default}|none    whether to preload the video, or wait for user action
        *   debug      = 1|{default}0    whether to show some debug info via console.log()
-       *  savedDataUrl= {url}|none      a full project JSON file reference to preload into player
        **/
       config = {
         autohide: qs.autohide === "1" ? true : false,
@@ -508,12 +515,12 @@ function init() {
           jQuery( json.media[0].tracks ).each( function( trackN, currentTrack ){ //xxxp [0]
             jQuery( currentTrack.trackEvents ).each( function( idx, val ){
               config.debug  &&  console.log( val );
-              /**/ if (val.type == 'sequencer'){ popcorn.sequencer( val.popcornOptions ); }
-              else if (val.type == 'image'    ){ popcorn.image(     val.popcornOptions ); }
-              else if (val.type == 'text'     ){ popcorn.text(      val.popcornOptions ); }
-              else{
-                alert( 'warning: skipping unsupported project track event of type: ' + val.type ); //xxxp
+              if ( typeof popcorn[val.type] == 'undefined' ) {
+                alert( 'warning: skipping unsupported project track event of type: ' + val.type );
+                return;
               }
+              popcorn[ val.type ] ( val.popcornOptions );
+
               if ( clickThumb===null  &&  val.popcornOptions.thumbnailSrc ) {
                 clickThumb = val.popcornOptions.thumbnailSrc;
               }
@@ -678,7 +685,7 @@ function init() {
       });
 
       // Setup UI based on config options
-      if ( !config.showinfo ) {
+      if ( !config.showinfo ) { //xxxp not working now
         var embedInfo = document.getElementById( "embed-info" );
         embedInfo.parentNode.removeChild( embedInfo );
       }
