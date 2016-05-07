@@ -5,11 +5,9 @@
 *.mp3
 *.mp4
 *.oga
-*.ogg
 *.ogv
 *.sqlite
 *.swp
-*.wav
 *.webm
 *~
 /local.json
