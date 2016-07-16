@@ -17,7 +17,11 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "events/event" ],
     // Localize the docroot of the popcorn install path.  Examples:
     //   archive.org/pop/editor.html  becomes  "/pop"
     //   DOMAIN/editor.html           becomes  ""
-    var basedir = location.pathname.replace(/\/[^\/]+\.html*$/, '');
+    var basedir = "";
+    if ( location.pathname.match( /\/[^\/]+\.html*$/ ) ){
+      // [expected typical case]
+      basedir = location.pathname.replace(/\/[^\/]+\.html*$/, '');
+    }
 
     var _this = this,
         _id, _name, _template, _description, _dataObject, _video,
