@@ -101,7 +101,7 @@ define([ "editor/editor", "editor/base-editor",
     // Requires archive.org account and to be logged in (will confirm that).
     // Once item is created, the item will have the popcorn player interface right at the top!
     function archiveProject() {
-      var url = '/services/maker.php?create_popcorn=1'; //xxxp no hostname -v- CORS issues, etc.
+      var url = 'https://archive.org/services/maker.php?create_popcorn=1';
 
       var project = JSON.parse( JSON.stringify( _project ) );
       project.name        = $('.butter-project-title'      ).val();
