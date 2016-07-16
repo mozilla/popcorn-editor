@@ -14,6 +14,11 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "events/event" ],
 
   function Project( butter ) {
 
+    // Localize the docroot of the popcorn install path.  Examples:
+    //   archive.org/pop/editor.html  becomes  "/pop"
+    //   DOMAIN/editor.html           becomes  ""
+    var basedir = location.pathname.replace(/\/[^\/]+\.html*$/, '');
+
     var _this = this,
         _id, _name, _template, _description, _dataObject, _video,
         _publishUrl, _iframeUrl, _remixedFrom, _remixedFromUrl, _makeid, _isRemix,
@@ -32,7 +37,7 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "events/event" ],
         // Interval for backups, starts first time user clicks Save.
         _backupInterval = -1,
 
-        _thumbnail = location.protocol + "//" + location.host + "/resources/icons/fb-logo.png",
+        _thumbnail = location.protocol + "//" + location.host + basedir + "/resources/icons/fb-logo.png",
         _background = "#FFFFFF";
 
     function invalidate() {
