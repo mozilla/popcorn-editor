@@ -459,29 +459,35 @@ function init() {
         savedDataUrl: qs.savedDataUrl === "" ? false : qs.savedDataUrl,
         debug: qs.debug|0
       };
+      config.home = location.href.replace(/\/embed\.html.*/, '/');
 
+
+
+
+      resizeHandler.resize();
+      window.addEventListener( "resize", resizeHandler.resize );
+
+
+    var loadJSON = function( loadedcallback ){
       if ( config.savedDataUrl  &&  config.savedDataUrl.indexOf('http')===0  &&  !config.savedDataUrl.match( /https*:\/\// ) ){
         // prolly url encoded good citizen!  decode it
         config.savedDataUrl = decodeURIComponent( config.savedDataUrl );
       }
 
 
-      resizeHandler.resize();
-      window.addEventListener( "resize", resizeHandler.resize );
-
-      var home = location.href.replace(/\/embed\.html.*/, '/');
-
-      var json = '';
       if ( !config.savedDataUrl ) {
-        config.savedDataUrl = home + 'templates/basic/projects/archive.json';
+        config.savedDataUrl = config.home + 'templates/basic/projects/archive.json';
       }
-
-      // do a BLOCKING ajax load of the project JSON xxxp
       config.debug  &&  console.log( 'savedDataUrl:', config.savedDataUrl );
-      jQuery.ajax({url: config.savedDataUrl,
-                   async: false,
-                   success:function( resp ){ json = resp; }});
 
+      jQuery.ajax({url: config.savedDataUrl,
+                   success:function( resp ){
+                     loadedcallback( resp );
+                   }});
+    };
+
+
+    var setup = function( json ){
       Controls.create( "controls", {
         onShareClick: function() {
           shareClick( popcorn );
@@ -505,28 +511,30 @@ function init() {
             jQuery( "#post-roll .embed-author, #share .embed-author, #attribution-details .attribution-author" ).prepend( json.author );
           }
 
-          jQuery( '#remix-post' ).attr( 'href', home + 'editor.html?savedDataUrl=' + encodeURIComponent( config.savedDataUrl ));
+          jQuery( '#remix-post' ).attr( 'href', config.home + 'editor.html?savedDataUrl=' + encodeURIComponent( config.savedDataUrl ));
 
           // now move the JSON project into a new Popcorn instance
           // and grab a video thumbnail or image thumbnail for the "click to play"
           var clickThumb = null, clickImg = null;
           popcorn = Popcorn.smart('#container', [ '#t=,' + json.media[0].duration ], {"frameAnimation": true,
                                                                                       "id": "Butter-Generated"});
-          jQuery( json.media[0].tracks ).each( function( trackN, currentTrack ){ //xxxp [0]
-            jQuery( currentTrack.trackEvents ).each( function( idx, val ){
-              config.debug  &&  console.log( val );
-              if ( typeof popcorn[val.type] == 'undefined' ) {
-                alert( 'warning: skipping unsupported project track event of type: ' + val.type );
-                return;
-              }
-              popcorn[ val.type ] ( val.popcornOptions );
+          jQuery.each( json.media, function( mediaN, media ){
+            jQuery.each( media.tracks, function( trackN, track ){
+              jQuery.each( track.trackEvents, function( eventN, event ){
+                config.debug  &&  console.log( event );
+                if ( typeof popcorn[event.type] == 'undefined' ) {
+                  alert( 'warning: skipping unsupported project track event of type: ' + event.type );
+                  return;
+                }
+                popcorn[ event.type ] ( event.popcornOptions );
 
-              if ( clickThumb===null  &&  val.popcornOptions.thumbnailSrc ) {
-                clickThumb = val.popcornOptions.thumbnailSrc;
-              }
-              if ( clickImg===null  &&  val.type=='image'  &&  val.popcornOptions.src ) {
-                clickImg = val.popcornOptions.src;
-              }
+                if ( clickThumb===null  &&  event.popcornOptions.thumbnailSrc ) {
+                  clickThumb = event.popcornOptions.thumbnailSrc;
+                }
+                if ( clickImg===null  &&  event.type=='image'  &&  event.popcornOptions.src ) {
+                  clickImg = event.popcornOptions.src;
+                }
+              });
             });
           });
 
@@ -685,10 +693,17 @@ function init() {
       });
 
       // Setup UI based on config options
-      if ( !config.showinfo ) { //xxxp not working now
+      if ( !config.showinfo ) { //xxxp not working now -- not sure when this last worked?  htm elem nonexistent..
         var embedInfo = document.getElementById( "embed-info" );
         embedInfo.parentNode.removeChild( embedInfo );
       }
+
+      };//end setup()
+
+
+      loadJSON( setup );
+
+
 
       // Some config options want the video to be ready before we do anything.
       function onLoad() {
