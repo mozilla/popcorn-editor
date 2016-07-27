@@ -6,6 +6,8 @@
   document.addEventListener( "DOMContentLoaded", function() {
     Butter.init({
       config: "./templates/basic/config.json",
+      location: window.location,
+      debug: false,
       ready: function( butter ) {
         butter.listen( "mediaready", function mediaReady() {
           butter.unlisten( "mediaready", mediaReady );

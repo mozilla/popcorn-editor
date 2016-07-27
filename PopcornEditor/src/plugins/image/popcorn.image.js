@@ -192,6 +192,10 @@
 
             Popcorn.getJSONP( uri, _flickrStaticImage );
           } else {
+            if ( options.src.charAt(0)=='/' ) {
+              // make locally qualified inside popcorn docroot since popcorn may be in a subdir
+              options.src = '.' + options.src;
+            }
             _link = createImageDiv( options.src, options.linkSrc, _this );
             setupImageDiv();
           }

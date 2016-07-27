@@ -366,13 +366,13 @@ function init() {
   }
 
   var require = requirejs.config({
-    baseUrl: "/src",
+    baseUrl: "./src",
     paths: {
       "json": "../external/require/json",
       "text": "../external/require/text",
-      "analytics": "/static/bower/webmaker-analytics/analytics",
-      "jquery": "/static/bower/jquery/dist/jquery.min",
-      "ua-parser": "/static/bower/ua-parser-js/src/ua-parser.min"
+      "analytics": "../static/bower/webmaker-analytics/analytics",
+      "jquery":    "../static/bower/jquery/dist/jquery.min",
+      "ua-parser": "../static/bower/ua-parser-js/src/ua-parser.min"
     }
   });
 
@@ -408,7 +408,15 @@ function init() {
           container = document.querySelectorAll( ".container" )[ 0 ];
 
       /**
-       * the embed can be configured via the query string:
+       * The embed can be configured via the query string:
+       *  savedDataUrl= {url}|none
+        *     A full project JSON file reference to preload into player.
+       *      NOTE: savedDataUrl is effectively required to show a project.
+       *      JSON file references may be fully or locally qualified.
+       *      Examples:
+       *        savedDataUrl=templates/basic/projects/stop-and-frisk.json
+       *        savedDataUrl=https://archive.org/services/maker.php?edl=Tracey_pooh-politicalAdscheckPlease
+       *
        *   autohide   = 1{default}|0    automatically hide the controls once playing begins
        *   autoplay   = 1|{default}0    automatically play the video on load
        *   controls   = 1{default}|0    display controls
@@ -418,6 +426,7 @@ function init() {
        *   loop       = 1|0{default}    whether to loop when hitting the end
        *   showinfo   = 1{default}|0    whether to show video title, author, etc. before playing
        *   preload    = auto{default}|none    whether to preload the video, or wait for user action
+       *   debug      = 1|{default}0    whether to show some debug info via console.log()
        **/
       config = {
         autohide: qs.autohide === "1" ? true : false,
@@ -446,12 +455,39 @@ function init() {
         }( document )),
         loop: qs.loop === "1" ? true : false,
         branding: qs.branding === "0" ? false : true,
-        showinfo: qs.showinfo === "0" ? false : true
+        showinfo: qs.showinfo === "0" ? false : true,
+        savedDataUrl: qs.savedDataUrl === "" ? false : qs.savedDataUrl,
+        debug: qs.debug|0
       };
+      config.home = location.href.replace(/\/embed\.html.*/, '/');
+
+
+
 
       resizeHandler.resize();
       window.addEventListener( "resize", resizeHandler.resize );
 
+
+    var loadJSON = function( loadedcallback ){
+      if ( config.savedDataUrl  &&  config.savedDataUrl.indexOf('http')===0  &&  !config.savedDataUrl.match( /https*:\/\// ) ){
+        // prolly url encoded good citizen!  decode it
+        config.savedDataUrl = decodeURIComponent( config.savedDataUrl );
+      }
+
+
+      if ( !config.savedDataUrl ) {
+        config.savedDataUrl = config.home + 'templates/basic/projects/archive.json';
+      }
+      config.debug  &&  console.log( 'savedDataUrl:', config.savedDataUrl );
+
+      jQuery.ajax({url: config.savedDataUrl,
+                   success:function( resp ){
+                     loadedcallback( resp );
+                   }});
+    };
+
+
+    var setup = function( json ){
       Controls.create( "controls", {
         onShareClick: function() {
           shareClick( popcorn );
@@ -463,9 +499,54 @@ function init() {
           fullscreenClick();
         },
         init: function( setPopcorn ) {
-          // writes out the Popcorn initialization code as popcornDataFn()
-          window.popcornDataFn();
+          config.debug  &&  console.log( json );
+
+          jQuery( "#attribution-details .attribution-title, .embed-title" ).text( json.name );
+
+          if ( json.description ) {
+            jQuery( "#post-roll .post-roll-description" ).prepend( json.description );
+          }
+
+          if ( json.author ) {
+            jQuery( "#post-roll .embed-author, #share .embed-author, #attribution-details .attribution-author" ).prepend( json.author );
+          }
+
+          jQuery( '#remix-post' ).attr( 'href', config.home + 'editor.html?savedDataUrl=' + encodeURIComponent( config.savedDataUrl ));
+
+          // now move the JSON project into a new Popcorn instance
+          // and grab a video thumbnail or image thumbnail for the "click to play"
+          var clickThumb = null, clickImg = null;
+          popcorn = Popcorn.smart('#container', [ '#t=,' + json.media[0].duration ], {"frameAnimation": true,
+                                                                                      "id": "Butter-Generated"});
+          jQuery.each( json.media, function( mediaN, media ){
+            jQuery.each( media.tracks, function( trackN, track ){
+              jQuery.each( track.trackEvents, function( eventN, event ){
+                config.debug  &&  console.log( event );
+                if ( typeof popcorn[event.type] == 'undefined' ) {
+                  alert( 'warning: skipping unsupported project track event of type: ' + event.type );
+                  return;
+                }
+                popcorn[ event.type ] ( event.popcornOptions );
+
+                if ( clickThumb===null  &&  event.popcornOptions.thumbnailSrc ) {
+                  clickThumb = event.popcornOptions.thumbnailSrc;
+                }
+                if ( clickImg===null  &&  event.type=='image'  &&  event.popcornOptions.src ) {
+                  clickImg = event.popcornOptions.src;
+                }
+              });
+            });
+          });
+
+          if ( clickThumb === null ) {
+            clickThumb = clickImg;
+          }
+          if ( clickThumb !== null ) {
+            jQuery( "#thumbnail-container" ).css( 'background-color','black' ).html( '<img style="display:block; width:100%; height:100%; object-fit:contain;" src="'+clickThumb+'"/>' ); //xxxp bg black
+          }
+
           popcorn = Popcorn.byId( "Butter-Generated" );
+
           setPopcorn( popcorn );
           // Always show controls.  See #2284 and #2298 on supporting
           // options.controls, options.autohide.
@@ -612,10 +693,17 @@ function init() {
       });
 
       // Setup UI based on config options
-      if ( !config.showinfo ) {
+      if ( !config.showinfo ) { //xxxp not working now -- not sure when this last worked?  htm elem nonexistent..
         var embedInfo = document.getElementById( "embed-info" );
         embedInfo.parentNode.removeChild( embedInfo );
       }
+
+      };//end setup()
+
+
+      loadJSON( setup );
+
+
 
       // Some config options want the video to be ready before we do anything.
       function onLoad() {
@@ -680,7 +768,7 @@ document.addEventListener( "DOMContentLoaded", function() {
     rscript.onload = function() {
       init();
     };
-    rscript.src = "/external/require/require.js";
+    rscript.src = "external/require/require.js";
     document.head.appendChild( rscript );
   } else {
     init();

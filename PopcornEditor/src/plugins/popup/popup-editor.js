@@ -109,7 +109,7 @@
               iconImg.src = "";
             }
             else {
-              iconImg.src = "/src/plugins/popup/images/" + value + ".png";
+              iconImg.src = "./src/plugins/popup/images/" + value + ".png";
               iconImg.style.visibility = "initial";
             }
         }

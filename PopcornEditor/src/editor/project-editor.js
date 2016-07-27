@@ -5,8 +5,8 @@
 define([ "editor/editor", "editor/base-editor",
           "l10n!../../{{lang}}/layouts/project-editor.html",
           "util/social-media", "ui/widget/textbox",
-          "ui/widget/tooltip", "analytics" ],
-  function( Editor, BaseEditor, LAYOUT_SRC, SocialMedia, TextboxWrapper, ToolTip, analytics ) {
+          "ui/widget/tooltip", "core/logger", "dialog/dialog", "analytics"],
+  function( Editor, BaseEditor, LAYOUT_SRC, SocialMedia, TextboxWrapper, ToolTip, Logger, Dialog, analytics ) {
 
   Editor.register( "project-editor", LAYOUT_SRC, function( rootElement, butter ) {
 
@@ -80,6 +80,69 @@ define([ "editor/editor", "editor/base-editor",
       toggleSaveButton( false );
     }
 
+
+    function failAndResetSave( msg ){
+      // aplogies, this forces a call to the "invalidate()" project
+      // which will flip the butter.project.isSaved back to false
+      butter.project['public'] = false;
+      butter.project['public'] = true;
+
+      // reset the button state so user can try pressing "Save" again later
+      toggleSaving( true );
+      toggleSaveButton( true );
+
+      // dialog to the user
+      showErrorDialog( msg );
+      return false;
+    }
+
+
+    // Saves the project to a new archive.org item.
+    // Requires archive.org account and to be logged in (will confirm that).
+    // Once item is created, the item will have the popcorn player interface right at the top!
+    function archiveProject() {
+      var url = 'https://archive.org/services/maker.php?create_popcorn=1';
+
+      var project = JSON.parse( JSON.stringify( _project ) );
+      project.name        = $('.butter-project-title'      ).val();
+      project.description = $('.butter-project-description').val();
+      project.media       = project.data.media;
+      project.targets     = project.data.targets;
+      delete project.data;
+      // remove clutter:
+      delete project['public'];
+      delete project.isSaved;
+      delete project.isPublished;
+
+      var postdata = JSON.stringify ( project );
+      var logger = new Logger ( 'saver' );
+      logger.log( postdata );
+      if (typeof console != 'undefined'  &&  typeof console.log != 'undefined')
+        console.log( postdata );
+
+      if ( document.cookie.indexOf('logged-in-user=') == -1 ){ //xxxp a bit too late -- dont want them to lose project!
+        return failAndResetSave( '<img style="float:right; padding:10px; width:79px; height:79px;" src="https://archive.org/images/glogo.png"/> To save your project, you will need to be logged in with a valid archive.org account<br/><br/>You can <a target="_blank" href="https://archive.org/account/login.php?referer=/index.php">login or register now</a>.' );
+      }
+
+      if ( project.name==='' ){
+        return failAndResetSave( "Please enter a project title (and ideally a description, too) before saving" );
+      }
+
+      postdata = {json : postdata};
+
+      $.post(url, postdata, function(htm){//xxxp handle 4xx 5xx type http fails
+        // look for success indicator
+        var mat = htm.match(/>(https:\/\/archive.org\/details\/[^<]+)/);
+        if (mat){
+          showErrorDialog( '<h1>Project saved!</h1><br/>You can see this new item at:<br/> <a target="_blank" href="'+mat[1]+'">'+mat[1]+'</a> ' );
+        }
+        else {
+          failAndResetSave( "Project failed to save to archive.org" );
+        }
+      });
+    }
+
+
     function submitSave() {
       toggleSaving( false );
       _saveButton.textContent = "Saving";
@@ -88,6 +151,11 @@ define([ "editor/editor", "editor/base-editor",
       butter.project.save(function( e ) {
         if ( e.status === "okay" ) {
           afterSave();
+
+          if ( butter.config.value( 'archiveProject' ) ){
+            archiveProject();
+          }
+
           return;
         } else {
           toggleSaveButton( true );
