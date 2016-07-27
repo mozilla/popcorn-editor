@@ -1,0 +1,16 @@
+{
+  "name": "jsjpegmeta",
+  "description": "Get exif info from Jpeg files",
+  "version": "1.0.1",
+  "main": "jpegmeta.js",
+  "ignore": [
+    "**/.*",
+    "demo.html",
+    "demo.js",
+    "demo.py",
+    "package.json"
+  ],
+  "dependencies": {
+
+  }
+}
