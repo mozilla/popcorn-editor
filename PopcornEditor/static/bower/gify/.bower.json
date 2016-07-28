@@ -1,0 +1,14 @@
+{
+  "name": "gify",
+  "homepage": "https://github.com/rfrench/gify",
+  "_release": "cad395d364",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "cad395d3643695353cb010dcf247c569a9d30862"
+  },
+  "_source": "https://github.com/rfrench/gify.git",
+  "_target": "*",
+  "_originalSource": "https://github.com/rfrench/gify.git",
+  "_direct": true
+}
