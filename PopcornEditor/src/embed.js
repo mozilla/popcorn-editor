@@ -372,7 +372,10 @@ function init() {
       "text": "../external/require/text",
       "analytics": "../static/bower/webmaker-analytics/analytics",
       "jquery":    "../static/bower/jquery/dist/jquery.min",
-      "ua-parser": "../static/bower/ua-parser-js/src/ua-parser.min"
+      "ua-parser": "../static/bower/ua-parser-js/src/ua-parser.min",
+      "jsjpegmeta":"../static/bower/jsjpegmeta/jpegmeta",
+      "gify":"../static/bower/gify/gify.min",
+      "jdataview":"../static/bower/gify/jdataview"
     }
   });
 
@@ -387,6 +390,9 @@ function init() {
       "analytics",
       "text!layouts/attribution.html",
       "util/accepted-flash",
+      "jsjpegmeta",
+      "gify",
+      "jdataview",
       "util/accepted-ua",
       "popcorn"
     ],
@@ -468,7 +474,7 @@ function init() {
       window.addEventListener( "resize", resizeHandler.resize );
 
 
-    var loadJSON = function( loadedcallback ){
+      var loadJSON = function( setupProjectFromJSON ){
       if ( config.savedDataUrl  &&  config.savedDataUrl.indexOf('http')===0  &&  !config.savedDataUrl.match( /https*:\/\// ) ){
         // prolly url encoded good citizen!  decode it
         config.savedDataUrl = decodeURIComponent( config.savedDataUrl );
@@ -480,14 +486,96 @@ function init() {
       }
       config.debug  &&  console.log( 'savedDataUrl:', config.savedDataUrl );
 
-      jQuery.ajax({url: config.savedDataUrl,
-                   success:function( resp ){
-                     loadedcallback( resp );
-                   }});
+
+      // Define the normal/typical/fallback URL loader
+      var loadJSONfromURL = function(){
+        jQuery.ajax({url: config.savedDataUrl,
+                     success:function( resp ){
+                       setupProjectFromJSON( resp );
+                     }});
+      };
+
+
+      // If the project data URL passed in to us seems to be a JPG/GIF (based on extension),
+      // it may have JSON/EDL embedded inside it as a JPEG/GIF comment / EXIF tag!
+      // So let's download the .jpg/.gif and see...
+      // (For an example of constructing such a JPEG/GIF (and instructions on howto), see:
+      //   https://archive.org/~tracey/pope/ )
+      if ( config.savedDataUrl.match(/\.(gif|jpg)$/i) ){
+        var oReq = new XMLHttpRequest(); // NOTE: MSIE only gets compatibility in v11+
+        oReq.addEventListener("load", function(oEvent) {
+          function ab2str(buf) {
+            // converts arraybuffer to binary string
+            return String.fromCharCode.apply(null, new Uint16Array(buf));
+          }
+
+          var json = '';
+          var byteArray = new Uint8Array(oReq.response);
+          var data = ab2str(byteArray);
+
+          if ( config.savedDataUrl.match(/\.gif$/i) ){
+            var gifInfo = gify.getInfo(data);
+            jQuery.each(gifInfo.images, function(i, image){
+              try {
+                if ( typeof image.comments == 'undefined' ){
+                  return;
+                }
+                val = JSON.parse( image.comments );
+                if ( val ){
+                  json = val;
+                  setupProjectFromJSON( json );
+                  return false;//logical break stmt
+                }
+              }
+              catch ( e ){ } // not likely JSON/EDL -- move on!
+            });
+          }
+          else{
+            var jpeg = new JpegMeta.JpegFile(data, 'something.jpg');
+            jQuery.each(jpeg.metaGroups, function(key, group){
+              jQuery.each(group.metaProps, function(key2, prop){
+                if ( prop.description == 'Comment' ){
+                  var val = prop.value;
+                  if ( val  &&  val.length ){
+                    if (val[0]!='{'){
+                      val = '{'+val; //xxxp (JS 3rd party code bug?!)
+                    }
+                    try {
+                      val = JSON.parse( val );
+                      if ( val ){
+                        json = val;
+                        setupProjectFromJSON( json );
+                        return false;//logical break stmt
+                      }
+                    }
+                    catch ( e ){ } // not likely JSON/EDL -- move on!
+                  }
+                }
+              });
+              if (json!=='')
+                return false;//logical break stmt
+            });
+          }
+
+          if ( json === '' ) {
+            // Above URL did NOT appear to be a JSON/EDL injected JPG/GIF after all.
+            // Try to load project from the URL the normal way
+            // (maybe they saved the JSON project filename/url ended with .jpg/.gif for some reason?)
+            loadJSONfromURL();
+          }
+        });
+
+        oReq.responseType = "arraybuffer";
+        oReq.open("GET", config.savedDataUrl);
+        oReq.send();
+      }
+      else {
+        loadJSONfromURL();
+      }
     };
 
 
-    var setup = function( json ){
+    var setupProjectFromJSON = function( json ){
       Controls.create( "controls", {
         onShareClick: function() {
           shareClick( popcorn );
@@ -546,7 +634,6 @@ function init() {
           }
 
           popcorn = Popcorn.byId( "Butter-Generated" );
-
           setPopcorn( popcorn );
           // Always show controls.  See #2284 and #2298 on supporting
           // options.controls, options.autohide.
@@ -698,11 +785,10 @@ function init() {
         embedInfo.parentNode.removeChild( embedInfo );
       }
 
-      };//end setup()
+      };//end setupProjectFromJSON()
 
 
-      loadJSON( setup );
-
+      loadJSON( setupProjectFromJSON );
 
 
       // Some config options want the video to be ready before we do anything.

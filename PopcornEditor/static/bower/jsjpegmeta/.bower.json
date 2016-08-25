@@ -1,0 +1,24 @@
+{
+  "name": "jsjpegmeta",
+  "description": "Get exif info from Jpeg files",
+  "main": "jpegmeta.js",
+  "ignore": [
+    "**/.*",
+    "demo.html",
+    "demo.js",
+    "demo.py",
+    "package.json"
+  ],
+  "dependencies": {},
+  "homepage": "https://github.com/bennoleslie/jsjpegmeta",
+  "_release": "c9c0b81ae6",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "c9c0b81ae66d77d5a807d81f65804acb93843722"
+  },
+  "_source": "https://github.com/bennoleslie/jsjpegmeta.git",
+  "_target": "master",
+  "_originalSource": "https://github.com/bennoleslie/jsjpegmeta.git",
+  "_direct": true
+}
