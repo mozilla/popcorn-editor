@@ -839,24 +839,6 @@ window.Butter = {
         }
       };
 
-      /**
-       * loadFromSavedDataUrl
-       *
-       * Attempts to load project data from a specified url and parse it using JSON functionality.
-       *
-       * @param {String} savedDataUrl: The url from which to attempt to load saved project data.
-       * @param {Function} responseCallback: A callback function which is called upon completion (successful or not).
-       * @returns: If successful an object is returned containing project data. Otherwise, null.
-       */
-      function loadFromSavedDataUrl( savedDataUrl, responseCallback ) {
-        // if no valid url was provided, return early
-        if ( !savedDataUrl ) {
-          responseCallback();
-          return;
-        }
-
-        xhr.get( savedDataUrl, responseCallback );
-      }
 
       /**
        * attemptDataLoad
@@ -1033,7 +1015,7 @@ window.Butter = {
         function loadConfigDefault() {
           // if previous attempt failed,
           // try loading data from the savedDataUrl value in the config
-          loadFromSavedDataUrl( _config.value( "savedDataUrl" ), function( savedData ) {
+          Project.load( _config.value( "savedDataUrl" ), function( savedData ) {
             var initialMediaList = initialMediaSources( qs );
 
             if ( !initialMediaList.length ) {
@@ -1072,7 +1054,7 @@ window.Butter = {
 
 
         // attempt to load data from savedDataUrl in query string
-        loadFromSavedDataUrl( savedDataUrl, function( savedData ) {
+        Project.load( savedDataUrl, function( savedData ) {
           // if there's no savedData returned, or the returned object does not
           // contain a media attribute, load the config specified saved data
           if ( !savedData || savedData.error || !savedData.media ) {

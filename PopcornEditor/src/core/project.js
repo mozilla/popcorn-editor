@@ -2,8 +2,17 @@
  * If a copy of the MIT license was not distributed with this file, you can
  * obtain one at https://raw.github.com/mozilla/butter/master/LICENSE */
 
-define( [ "core/eventmanager", "core/media", "util/sanitizer", "events/event" ],
-        function( EventManager, Media, Sanitizer, Event ) {
+var require = requirejs.config({
+  baseUrl: "./src",
+  paths: {
+    "jsjpegmeta":"../static/bower/jsjpegmeta/jpegmeta",
+    "gify":"../static/bower/gify/gify.min",
+    "jdataview":"../static/bower/gify/jdataview"
+  }
+});
+
+define( [ "core/eventmanager", "core/media", "util/sanitizer", "util/xhr", "events/event", "jsjpegmeta", "gify", "jdataview" ],
+        function( EventManager, Media, Sanitizer, xhr, Event  ) {
 
   var __butterStorage = window.localStorage,
       DATA_USAGE_WARNING = "Warning: Popcorn Maker LocalStorage quota exceeded. Stopping automatic backup. Will be restarted when project changes again.";
@@ -576,6 +585,105 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "events/event" ],
 
     callback( projectBackup, backupDate );
   };
+
+
+  /**
+    * load
+    *
+    * Attempts to load project data from a specified url and parse it using JSON functionality,
+    * into the project it corresponds to.
+    *
+    * @param {String} url: The url from which to attempt to load saved project data.
+    *   (eg: "savedDataUrl" CGI arg)
+    * @param {Function} responseCallback: A callback function which will get invoked
+    *   (with JSON as param to it) when project is ready to load.
+    *   If the url is undefined/falsey, we simply invoke the callback directly.
+    */
+  Project.load = function ( url, responseCallback ){
+    if ( !url ){
+      responseCallback();
+      return;
+    }
+
+    // If the project data URL passed in to us seems to be a JPG/GIF (based on extension),
+    // it may have JSON/EDL embedded inside it as a JPEG/GIF comment / EXIF tag!
+    // So let's download the .jpg/.gif and see...
+    // (For an example of constructing such a JPEG/GIF (and instructions on howto), see:
+    //   https://archive.org/~tracey/pope/ )
+    if ( url.match(/\.(gif|jpg)$/i) ){
+      var oReq = new XMLHttpRequest(); // NOTE: MSIE only gets compatibility in v11+
+      oReq.addEventListener("load", function(oEvent) {
+        function ab2str(buf) {
+          // converts arraybuffer to binary string
+          return String.fromCharCode.apply(null, new Uint16Array(buf));
+        }
+
+        var json = '';
+        var byteArray = new Uint8Array(oReq.response);
+        var data = ab2str(byteArray);
+
+        if ( url.match(/\.gif$/i) ){
+          var gifInfo = gify.getInfo(data);
+          jQuery.each(gifInfo.images, function(i, image){
+            try {
+              if ( typeof image.comments == 'undefined' ){
+                return;
+              }
+              val = JSON.parse( image.comments );
+              if ( val ){
+                json = val;
+                responseCallback( json );
+                return false;//logical break stmt
+              }
+            }
+            catch ( e ){ } // not likely JSON/EDL -- move on!
+          });
+        }
+        else{
+          var jpeg = new JpegMeta.JpegFile(data, 'something.jpg');
+          jQuery.each(jpeg.metaGroups, function(key, group){
+            jQuery.each(group.metaProps, function(key2, prop){
+              if ( prop.description == 'Comment' ){
+                var val = prop.value;
+                if ( val  &&  val.length ){
+                  if (val[0]!='{'){
+                    val = '{'+val; //xxxp (JS 3rd party code bug?!)
+                  }
+                  try {
+                    val = JSON.parse( val );
+                    if ( val ){
+                      json = val;
+                      responseCallback( json );
+                      return false;//logical break stmt
+                    }
+                  }
+                  catch ( e ){ } // not likely JSON/EDL -- move on!
+                }
+              }
+            });
+            if (json!=='')
+              return false;//logical break stmt
+          });
+        }
+
+        if ( json === '' ) {
+          // Above URL did NOT appear to be a JSON/EDL injected JPG/GIF after all.
+          // Try to load project from the URL the normal way
+          // (maybe they saved the JSON project filename/url ended with .jpg/.gif for some reason?)
+          xhr.get( url, responseCallback );
+        }
+      });
+
+      oReq.responseType = "arraybuffer";
+      oReq.open("GET", url);
+      oReq.send();
+    }
+    else {
+      // Use the normal/typical/fallback URL loader
+      xhr.get( url, responseCallback );
+    }
+  };
+
 
   return Project;
 });
