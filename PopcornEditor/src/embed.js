@@ -479,217 +479,217 @@ function init() {
       window.addEventListener( "resize", resizeHandler.resize );
 
 
-    // parse the savedDataUrl (to JSON) and then invoke the 2nd param (closure / anonymous function)
-    // with the parsed project JSON
-    Project.load( config.savedDataUrl, function( json ){ //xxxp indent me 2 spaces on PR approved!
-      Controls.create( "controls", {
-        onShareClick: function() {
-          shareClick( popcorn );
-        },
-        onRemixClick: function() {
-          remixClick( popcorn );
-        },
-        onFullscreenClick: function() {
-          fullscreenClick();
-        },
-        init: function( setPopcorn ) {
-          config.debug  &&  console.log( json );
+      // parse the savedDataUrl (to JSON) and then invoke the 2nd param (closure / anonymous function)
+      // with the parsed project JSON
+      Project.load( config.savedDataUrl, function( json ){
+        Controls.create( "controls", {
+          onShareClick: function() {
+            shareClick( popcorn );
+          },
+          onRemixClick: function() {
+            remixClick( popcorn );
+          },
+          onFullscreenClick: function() {
+            fullscreenClick();
+          },
+          init: function( setPopcorn ) {
+            config.debug  &&  console.log( json );
 
-          jQuery( "#attribution-details .attribution-title, .embed-title" ).text( json.name );
+            jQuery( "#attribution-details .attribution-title, .embed-title" ).text( json.name );
 
-          if ( json.description ) {
-            jQuery( "#post-roll .post-roll-description" ).prepend( json.description );
-          }
+            if ( json.description ) {
+              jQuery( "#post-roll .post-roll-description" ).prepend( json.description );
+            }
 
-          if ( json.author ) {
-            jQuery( "#post-roll .embed-author, #share .embed-author, #attribution-details .attribution-author" ).prepend( json.author );
-          }
+            if ( json.author ) {
+              jQuery( "#post-roll .embed-author, #share .embed-author, #attribution-details .attribution-author" ).prepend( json.author );
+            }
 
-          jQuery( '#remix-post' ).attr( 'href', config.home + 'editor.html?savedDataUrl=' + encodeURIComponent( config.savedDataUrl ));
+            jQuery( '#remix-post' ).attr( 'href', config.home + 'editor.html?savedDataUrl=' + encodeURIComponent( config.savedDataUrl ));
 
-          // now move the JSON project into a new Popcorn instance
-          // and grab a video thumbnail or image thumbnail for the "click to play"
-          var clickThumb = null, clickImg = null;
-          popcorn = Popcorn.smart('#container', [ '#t=,' + json.media[0].duration ], {"frameAnimation": true,
-                                                                                      "id": "Butter-Generated"});
-          jQuery.each( json.media, function( mediaN, media ){
-            jQuery.each( media.tracks, function( trackN, track ){
-              jQuery.each( track.trackEvents, function( eventN, event ){
-                config.debug  &&  console.log( event );
-                if ( typeof popcorn[event.type] == 'undefined' ) {
-                  alert( 'warning: skipping unsupported project track event of type: ' + event.type );
-                  return;
-                }
-                popcorn[ event.type ] ( event.popcornOptions );
+            // now move the JSON project into a new Popcorn instance
+            // and grab a video thumbnail or image thumbnail for the "click to play"
+            var clickThumb = null, clickImg = null;
+            popcorn = Popcorn.smart('#container', [ '#t=,' + json.media[0].duration ], {"frameAnimation": true,
+                                                                                        "id": "Butter-Generated"});
+            jQuery.each( json.media, function( mediaN, media ){
+              jQuery.each( media.tracks, function( trackN, track ){
+                jQuery.each( track.trackEvents, function( eventN, event ){
+                  config.debug  &&  console.log( event );
+                  if ( typeof popcorn[event.type] == 'undefined' ) {
+                    alert( 'warning: skipping unsupported project track event of type: ' + event.type );
+                    return;
+                  }
+                  popcorn[ event.type ] ( event.popcornOptions );
 
-                if ( clickThumb===null  &&  event.popcornOptions.thumbnailSrc ) {
-                  clickThumb = event.popcornOptions.thumbnailSrc;
-                }
-                if ( clickImg===null  &&  event.type=='image'  &&  event.popcornOptions.src ) {
-                  clickImg = event.popcornOptions.src;
-                }
+                  if ( clickThumb===null  &&  event.popcornOptions.thumbnailSrc ) {
+                    clickThumb = event.popcornOptions.thumbnailSrc;
+                  }
+                  if ( clickImg===null  &&  event.type=='image'  &&  event.popcornOptions.src ) {
+                    clickImg = event.popcornOptions.src;
+                  }
+                });
               });
             });
-          });
 
-          if ( clickThumb === null ) {
-            clickThumb = clickImg;
-          }
-          if ( clickThumb !== null ) {
-            jQuery( "#thumbnail-container" ).css( 'background-color','black' ).html( '<img style="display:block; width:100%; height:100%; object-fit:contain;" src="'+clickThumb+'"/>' ); //xxxp bg black
-          }
-
-          popcorn = Popcorn.byId( "Butter-Generated" );
-          setPopcorn( popcorn );
-          // Always show controls.  See #2284 and #2298 on supporting
-          // options.controls, options.autohide.
-          popcorn.controls( true );
-
-          if ( config.loop ) {
-            popcorn.loop( true );
-          }
-
-          // Either the video is ready, or we need to wait.
-          if ( popcorn.readyState() >= 1 ) {
-            onLoad();
-          } else {
-            popcorn.media.addEventListener( "canplay", onLoad );
-          }
-
-          if ( config.branding ) {
-            setupClickHandlers( popcorn, config );
-            setupEventHandlers( popcorn, config, analytics );
-
-            // Wrap textboxes so they click-to-highlight and are readonly
-            TextboxWrapper.applyTo( $( "#share-url" ), { readOnly: true } );
-            TextboxWrapper.applyTo( $( "#share-iframe" ), { readOnly: true } );
-
-            // Write out the iframe HTML necessary to embed this
-            $( "#share-iframe" ).value = buildIFrameHTML();
-
-            // Get the page's canonical URL and put in share URL
-            $( "#share-url" ).value = getCanonicalURL();
-          }
-
-          var sequencerEvents = popcorn.data.trackEvents.where({ type: "sequencer" }),
-              imageEvents = popcorn.data.trackEvents.where({ type: "image" }),
-              mapEvents = popcorn.data.trackEvents.where({ type: "googlemap" }),
-              attributionContainer = document.querySelector( ".attribution-details" ),
-              attributionMedia = document.querySelector( ".attribution-media" ),
-              toggler = $( ".attribution-logo" ),
-              closeBtn = $( ".attribution-close" ),
-              container = $( ".attribution-info" ),
-              checkedFlashVersion;
-
-          // Backwards compat for old layout. Removes the null media that's shown there.
-          if ( attributionMedia ) {
-            attributionContainer.removeChild( attributionMedia );
-          }
-
-          toggler.addEventListener( "click", function() {
-            container.classList.toggle( "attribution-on" );
-          } );
-
-          closeBtn.addEventListener( "click", function() {
-            container.classList.toggle( "attribution-on" );
-          } );
-
-          if ( sequencerEvents.length ) {
-            var clipsContainer = __defaultLayouts.querySelector( ".attribution-media" ).cloneNode( true ),
-                clipCont,
-                clip,
-                source,
-                type;
-
-            for ( var i = 0; i < sequencerEvents.length; i++ ) {
-              clip = sequencerEvents[ i ];
-              clipCont = __defaultLayouts.querySelector( ".data-container.media" ).cloneNode( true );
-              source = clip.source[ 0 ];
-              type = MediaUtil.checkUrl( source );
-
-              if ( type === "YouTube" && !checkedFlashVersion ) {
-                checkedFlashVersion = true;
-                FLASH.warn();
-              }
-
-              if ( type === "Archive" ) {
-                source = clip.linkback;
-              }
-
-              clipCont.querySelector( "span" ).classList.add( type.toLowerCase() + "-icon" );
-              clipCont.querySelector( "a" ).href = source;
-              clipCont.querySelector( "a" ).innerHTML = clip.title;
-
-              clipsContainer.appendChild( clipCont );
+            if ( clickThumb === null ) {
+              clickThumb = clickImg;
+            }
+            if ( clickThumb !== null ) {
+              jQuery( "#thumbnail-container" ).css( 'background-color','black' ).html( '<img style="display:block; width:100%; height:100%; object-fit:contain;" src="'+clickThumb+'"/>' ); //xxxp bg black
             }
 
-            attributionContainer.appendChild( clipsContainer );
-          }
+            popcorn = Popcorn.byId( "Butter-Generated" );
+            setPopcorn( popcorn );
+            // Always show controls.  See #2284 and #2298 on supporting
+            // options.controls, options.autohide.
+            popcorn.controls( true );
 
-          if ( imageEvents.length ) {
-            var imagesContainer = __defaultLayouts.querySelector( ".attribution-images" ).cloneNode( true ),
-                imgCont,
-                img,
-                imgPrefix = "/resources/icons/",
-                foundMatch = false;
+            if ( config.loop ) {
+              popcorn.loop( true );
+            }
 
-            for ( var k = 0; k < imageEvents.length; k++ ) {
-              img = imageEvents[ k ];
-              imgCont = __defaultLayouts.querySelector( ".data-container.image" ).cloneNode( true );
+            // Either the video is ready, or we need to wait.
+            if ( popcorn.readyState() >= 1 ) {
+              onLoad();
+            } else {
+              popcorn.media.addEventListener( "canplay", onLoad );
+            }
 
-              var href = img.photosetId || img.src || "http://www.flickr.com/search/?m=tags&q=" + img.tags,
-                  text = img.src || img.photosetId || img.tags,
-                  icon = document.createElement( "img" );
+            if ( config.branding ) {
+              setupClickHandlers( popcorn, config );
+              setupEventHandlers( popcorn, config, analytics );
 
-              icon.classList.add( "media-icon" );
+              // Wrap textboxes so they click-to-highlight and are readonly
+              TextboxWrapper.applyTo( $( "#share-url" ), { readOnly: true } );
+              TextboxWrapper.applyTo( $( "#share-iframe" ), { readOnly: true } );
 
-              imgCont.querySelector( "a" ).href = href;
-              imgCont.querySelector( "a" ).innerHTML = text;
+              // Write out the iframe HTML necessary to embed this
+              $( "#share-iframe" ).value = buildIFrameHTML();
 
-              // We have a slight edgecase where "default" image events have all attributes
-              // to support better user experience when trying different options in the image
-              // plugin editor. In this scenario, they didn't change past the default single image.
-              if ( img.tags && img.photosetId && img.src ) {
-                img.tags = img.photosetId = "";
+              // Get the page's canonical URL and put in share URL
+              $( "#share-url" ).value = getCanonicalURL();
+            }
+
+            var sequencerEvents = popcorn.data.trackEvents.where({ type: "sequencer" }),
+                imageEvents = popcorn.data.trackEvents.where({ type: "image" }),
+                mapEvents = popcorn.data.trackEvents.where({ type: "googlemap" }),
+                attributionContainer = document.querySelector( ".attribution-details" ),
+                attributionMedia = document.querySelector( ".attribution-media" ),
+                toggler = $( ".attribution-logo" ),
+                closeBtn = $( ".attribution-close" ),
+                container = $( ".attribution-info" ),
+                checkedFlashVersion;
+
+            // Backwards compat for old layout. Removes the null media that's shown there.
+            if ( attributionMedia ) {
+              attributionContainer.removeChild( attributionMedia );
+            }
+
+            toggler.addEventListener( "click", function() {
+              container.classList.toggle( "attribution-on" );
+            } );
+
+            closeBtn.addEventListener( "click", function() {
+              container.classList.toggle( "attribution-on" );
+            } );
+
+            if ( sequencerEvents.length ) {
+              var clipsContainer = __defaultLayouts.querySelector( ".attribution-media" ).cloneNode( true ),
+                  clipCont,
+                  clip,
+                  source,
+                  type;
+
+              for ( var i = 0; i < sequencerEvents.length; i++ ) {
+                clip = sequencerEvents[ i ];
+                clipCont = __defaultLayouts.querySelector( ".data-container.media" ).cloneNode( true );
+                source = clip.source[ 0 ];
+                type = MediaUtil.checkUrl( source );
+
+                if ( type === "YouTube" && !checkedFlashVersion ) {
+                  checkedFlashVersion = true;
+                  FLASH.warn();
+                }
+
+                if ( type === "Archive" ) {
+                  source = clip.linkback;
+                }
+
+                clipCont.querySelector( "span" ).classList.add( type.toLowerCase() + "-icon" );
+                clipCont.querySelector( "a" ).href = source;
+                clipCont.querySelector( "a" ).innerHTML = clip.title;
+
+                clipsContainer.appendChild( clipCont );
               }
 
-              if ( img.tags || img.photosetId || MediaUtil.checkUrl( img.src ) === "Flickr" ) {
-                foundMatch = true;
-                icon.src += imgPrefix + "flickr-black.png";
-                imgCont.insertBefore( icon, imgCont.firstChild );
-                imagesContainer.appendChild( imgCont );
-              } else if ( img.src.indexOf( "giphy" ) !== -1 ) {
-                foundMatch = true;
-                icon.src += imgPrefix + "giphy.png";
-                imgCont.insertBefore( icon, imgCont.firstChild );
-                imagesContainer.appendChild( imgCont );
-              } else {
-                imgCont = null;
+              attributionContainer.appendChild( clipsContainer );
+            }
+
+            if ( imageEvents.length ) {
+              var imagesContainer = __defaultLayouts.querySelector( ".attribution-images" ).cloneNode( true ),
+                  imgCont,
+                  img,
+                  imgPrefix = "/resources/icons/",
+                  foundMatch = false;
+
+              for ( var k = 0; k < imageEvents.length; k++ ) {
+                img = imageEvents[ k ];
+                imgCont = __defaultLayouts.querySelector( ".data-container.image" ).cloneNode( true );
+
+                var href = img.photosetId || img.src || "http://www.flickr.com/search/?m=tags&q=" + img.tags,
+                    text = img.src || img.photosetId || img.tags,
+                    icon = document.createElement( "img" );
+
+                icon.classList.add( "media-icon" );
+
+                imgCont.querySelector( "a" ).href = href;
+                imgCont.querySelector( "a" ).innerHTML = text;
+
+                // We have a slight edgecase where "default" image events have all attributes
+                // to support better user experience when trying different options in the image
+                // plugin editor. In this scenario, they didn't change past the default single image.
+                if ( img.tags && img.photosetId && img.src ) {
+                  img.tags = img.photosetId = "";
+                }
+
+                if ( img.tags || img.photosetId || MediaUtil.checkUrl( img.src ) === "Flickr" ) {
+                  foundMatch = true;
+                  icon.src += imgPrefix + "flickr-black.png";
+                  imgCont.insertBefore( icon, imgCont.firstChild );
+                  imagesContainer.appendChild( imgCont );
+                } else if ( img.src.indexOf( "giphy" ) !== -1 ) {
+                  foundMatch = true;
+                  icon.src += imgPrefix + "giphy.png";
+                  imgCont.insertBefore( icon, imgCont.firstChild );
+                  imagesContainer.appendChild( imgCont );
+                } else {
+                  imgCont = null;
+                }
+              }
+
+              // We only care about attributing Flickr and Giphy images
+              if ( foundMatch ) {
+                attributionContainer.appendChild( imagesContainer );
               }
             }
 
-            // We only care about attributing Flickr and Giphy images
-            if ( foundMatch ) {
-              attributionContainer.appendChild( imagesContainer );
+            // We only need to know if a maps event exists in some fashion.
+            if ( mapEvents.length ) {
+              var extraAttribution = __defaultLayouts.querySelector( ".attribution-extra" ).cloneNode( true );
+
+              extraAttribution.querySelector( ".data-container" ).innerHTML = Popcorn.manifest.googlemap.about.attribution;
+              attributionContainer.appendChild( extraAttribution );
             }
-          }
+          },
+          preload: config.preload
+        });
 
-          // We only need to know if a maps event exists in some fashion.
-          if ( mapEvents.length ) {
-            var extraAttribution = __defaultLayouts.querySelector( ".attribution-extra" ).cloneNode( true );
-
-            extraAttribution.querySelector( ".data-container" ).innerHTML = Popcorn.manifest.googlemap.about.attribution;
-            attributionContainer.appendChild( extraAttribution );
-          }
-        },
-        preload: config.preload
-      });
-
-      // Setup UI based on config options
-      if ( !config.showinfo ) { //xxxp not working now -- not sure when this last worked?  htm elem nonexistent..
-        var embedInfo = document.getElementById( "embed-info" );
-        embedInfo.parentNode.removeChild( embedInfo );
-      }
+        // Setup UI based on config options
+        if ( !config.showinfo ) { //xxxp not working now -- not sure when this last worked?  htm elem nonexistent..
+          var embedInfo = document.getElementById( "embed-info" );
+          embedInfo.parentNode.removeChild( embedInfo );
+        }
 
       }); // end Project.load() call
 
