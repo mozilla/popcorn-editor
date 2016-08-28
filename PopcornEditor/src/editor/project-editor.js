@@ -120,9 +120,14 @@ define([ "editor/editor", "editor/base-editor",
       if (typeof console != 'undefined'  &&  typeof console.log != 'undefined')
         console.log( postdata );
 
-      if ( document.cookie.indexOf('logged-in-user=') == -1 ){ //xxxp a bit too late -- dont want them to lose project!
+      // xxxp we dont require an IA login to save a project now -- though it *helps* because
+      // a user can associate all their projects with *their* account -- and would allow
+      // for project/item editing/replacement in the future (which they can't do if "anonymous"!)
+      /*
+      if ( document.cookie.indexOf('logged-in-user=') == -1 ){
         return failAndResetSave( '<img style="float:right; padding:10px; width:79px; height:79px;" src="https://archive.org/images/glogo.png"/> To save your project, you will need to be logged in with a valid archive.org account<br/><br/>You can <a target="_blank" href="https://archive.org/account/login.php?referer=/index.php">login or register now</a>.' );
       }
+      */
 
       if ( project.name==='' ){
         return failAndResetSave( "Please enter a project title (and ideally a description, too) before saving" );
