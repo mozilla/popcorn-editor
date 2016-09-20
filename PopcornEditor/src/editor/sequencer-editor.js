@@ -556,7 +556,8 @@ define( [ "util/mediatypes", "editor/editor", "util/time",
     this.resizable( trackEvent, _container, _target, {
       handlePositions: "n,ne,e,se,s,sw,w,nw",
       minWidth: 10,
-      minHeight: 10
+      minHeight: 10,
+      aspectRatio: true
     });
   });
 });

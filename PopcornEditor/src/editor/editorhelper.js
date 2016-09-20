@@ -283,6 +283,7 @@ define( [ "util/xhr", "util/keys", "jquery" ], function( XHR, KEYS, $ ) {
 
       $( resizeContainer ).resizable({
         handles: options.handlePositions,
+        aspectRatio: options.aspectRatio,
         start: function() {
           iframeCover.style.display = "block";
 
