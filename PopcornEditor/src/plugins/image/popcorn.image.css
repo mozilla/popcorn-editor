@@ -1,4 +1,4 @@
-.image-plugin-container {
+.image-plugin-container, .image-plugin-container.ui-resizable {
   position: absolute;
 }
 .image-plugin-container.track-event-editing .clone-container {
