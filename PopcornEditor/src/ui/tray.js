@@ -42,6 +42,18 @@ define( [ "util/lang",  "./logo-spinner", "./resizeHandler", "./toggler",
       butter.currentMedia.addTrack( null, true );
     } );
 
+    butter.listen('trackadded', function () {
+      if ( butter.currentMedia.tracks.length >= butter.config.value( "maxTracks" ) ) {
+        addTrackButton.disabled = true;
+      }
+    });
+
+    butter.listen('trackremoved', function () {
+      if ( butter.currentMedia.tracks.length < butter.config.value( "maxTracks" ) ) {
+        addTrackButton.disabled = false;
+      }
+    });
+
     this.attachToDOM = function() {
       bodyWrapper.appendChild( trayRoot );
     };

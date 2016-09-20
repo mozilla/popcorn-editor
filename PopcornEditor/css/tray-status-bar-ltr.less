@@ -40,6 +40,14 @@ html[dir="ltr"] {
       margin-left: 10px;
       line-height: 20px;
       outline: none;
+
+      &[disabled] {
+        cursor: not-allowed;
+        color: rgb(185, 185, 185);
+        &:hover {
+          background-color: rgb(244, 245, 245);
+        }
+      }
     }
   }
 

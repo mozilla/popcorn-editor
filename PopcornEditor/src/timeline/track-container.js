@@ -130,7 +130,7 @@ define( [ "core/logger", "util/dragndrop", "./ghost-manager", "analytics" ],
       },
       drop: function( dropped, mousePosition, popcornOptions ) {
         // Used if drop spawns a new track
-        var newTrack, draggableType,
+        var lastTrack, draggableType,
             trackEvent, trackEventRect,
             droppedLeftValue, duration,
             start, end,
@@ -150,10 +150,10 @@ define( [ "core/logger", "util/dragndrop", "./ghost-manager", "analytics" ],
           analytics.event( "Track Event Added", {
             label: "dropped"
           });
-          newTrack = butter.currentMedia.addTrack();
-          newTrack.view.dispatch( "plugindropped", {
-            start: ( mousePosition[ 0 ] - containerRect.left ) / _container.clientWidth * newTrack.view.duration,
-            track: newTrack,
+          lastTrack = butter.currentMedia.tracks[butter.currentMedia.tracks.length - 1];
+          lastTrack.view.dispatch( "plugindropped", {
+            start: ( mousePosition[ 0 ] - containerRect.left ) / _container.clientWidth * lastTrack.view.duration,
+            track: lastTrack,
             type: dropped.getAttribute( "data-popcorn-plugin-type" ),
             popcornOptions: popcornOptions
           });
