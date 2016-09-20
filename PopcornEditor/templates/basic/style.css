@@ -97,7 +97,7 @@ body.editor-minimized .stage-wrapper {
   padding-bottom: 56.25%;
   height: 0;
   z-index: 1;
-  background: #FFF;
+  background: #000;
 }
 .butter-header-spacing #video {
   box-shadow: inset 0 0 0 1px #DDD;

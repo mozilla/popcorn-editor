@@ -12,7 +12,6 @@ define([ "editor/editor", "editor/base-editor",
 
     var _rootElement = rootElement,
         _socialMedia = new SocialMedia(),
-        _backgroundInput = _rootElement.querySelector( ".butter-project-background-colour" ),
         _colorContainer = _rootElement.querySelector( ".color-container" ),
         _viewSourceBtn = _rootElement.querySelector( ".butter-view-source-btn" ),
         _settingsTabBtn = _rootElement.querySelector( ".settings-tab-btn" ),
@@ -25,9 +24,6 @@ define([ "editor/editor", "editor/base-editor",
         _projectTab,
         _editorHelper = butter.editor.editorHelper,
         _idx;
-
-
-    _backgroundInput.value = butter.project.background ? butter.project.background : "#FFFFFF";
 
     function activateProjectTab( target ) {
       var currentDataName = target.getAttribute( "data-tab-name" ),
@@ -264,15 +260,6 @@ define([ "editor/editor", "editor/base-editor",
 
       },
       close: function() {
-      }
-    });
-
-    this.attachColorChangeHandler( _colorContainer, null, "background", function( te, options, message ) {
-      if ( message ) {
-        _this.setErrorState( message );
-        return;
-      } else {
-        _project.background = options.background;
       }
     });
   }, true );
