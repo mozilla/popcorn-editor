@@ -12,25 +12,10 @@
                    function( rootElement, butter, compiledLayout ) {
 
     var _rootElement = rootElement,
-        _tagRadio = _rootElement.querySelector( "#image-tag-radio" ),
-        _galleryRadio = _rootElement.querySelector( "#image-gallery-radio" ),
-        _tagInput = _rootElement.querySelector( "#image-tag-input" ),
-        _galleryInput = _rootElement.querySelector( "#image-gallery-input" ),
         _urlInput = _rootElement.querySelector( "#image-url-input" ),
-        _titleInput = _rootElement.querySelector( "#image-title-input" ),
-        _linkInput = _rootElement.querySelector( "#image-link-input" ),
-        _countInput = _rootElement.querySelector( "#image-count-input" ),
-        _singleImageTab = _rootElement.querySelector( ".image-single" ),
-        _flickrImageTab = _rootElement.querySelector( ".image-flickr" ),
-        _dropArea = _rootElement.querySelector( ".image-droparea" ),
-        _imageToggler = _rootElement.querySelector( "#image-toggler" ),
         _urlRegex,
         _this = this,
         _trackEvent,
-        _galleryActive = false,
-        _tagsActive = false,
-        _flickrActive = false,
-        _singleActive = false,
         _popcornInstance,
         _inSetup,
         _cachedValues;
@@ -40,74 +25,12 @@
       _this.updateTrackEventSafe( te, props );
     }
 
-    function toggleTabs() {
-      _singleImageTab.classList.toggle( "display-off" );
-      _flickrImageTab.classList.toggle( "display-off" );
-    }
-
     function attachDropHandlers() {
-      __EditorHelper.uploader( _trackEvent, _dropArea );
-      __EditorHelper.droppable( _trackEvent, _dropArea );
       butter.listen( "droppable-unsupported", unSupported );
-      butter.listen( "droppable-upload-failed", failedUpload );
-      butter.listen( "droppable-succeeded", uploadSuceeded );
     }
 
     function unSupported() {
       _this.setErrorState( "Sorry, but your browser doesn't support this feature." );
-    }
-
-    function failedUpload( e ) {
-      _this.setErrorState( e.data );
-    }
-
-    function uploadSuceeded( e ) {
-      _dropArea.querySelector( "img" ).src = e.data.url;
-    }
-
-    function calcImageTime() {
-      var imageTime = rootElement.querySelector( ".image-time-bold" ),
-          popcornOptions = _trackEvent.popcornOptions,
-          eventDuration = popcornOptions.end - popcornOptions.start,
-          time;
-
-      time = Math.round( ( eventDuration / popcornOptions.count ) * ( Math.pow( 10, 1 ) ) ) / Math.pow( 10, 1 );
-      time = time > 0.01 ? time : 0.01;
-
-      imageTime.innerHTML = time + " seconds";
-    }
-
-    function galleryHandler() {
-      if ( !_galleryActive && !_inSetup ) {
-        _galleryActive = true;
-        _trackEvent.update({
-          src: "",
-          linkSrc: "",
-          tags: "",
-          photosetId: _cachedValues.photosetId.data
-        });
-      }
-      _tagsActive = _galleryInput.disabled = false;
-      _tagInput.disabled = _galleryRadio.checked = true;
-      _galleryInput.classList.remove( "butter-disabled" );
-      _tagInput.classList.add( "butter-disabled" );
-    }
-
-    function tagHandler() {
-      if ( !_tagsActive && !_inSetup ) {
-        _tagsActive = true;
-        _trackEvent.update({
-          tags: _cachedValues.tags.data,
-          src: "",
-          linkSrc: "",
-          photosetId: ""
-        });
-      }
-
-      _galleryActive = _tagInput.disabled = false;
-      _tagInput.classList.remove( "butter-disabled" );
-      _galleryInput.disabled = _tagRadio.checked = true;
-      _galleryInput.classList.add( "butter-disabled" );
     }
 
     function isEmptyInput( value ) {
@@ -118,48 +41,15 @@
       return ( /^data:image/ ).test( url );
     }
 
-    function flickrHandler() {
-      var popcornOptions = _trackEvent.popcornOptions;
-
-      _flickrActive = true;
-      _singleActive = false;
-
-      if ( _flickrImageTab.classList.contains( "display-off" ) ) {
-        toggleTabs();
-        _imageToggler.value = "image-flickr";
-      }
-
-      // Default state is Using a Flickr Tag Search. This ensures that even if the first two conditions are false
-      // that a default state is still properly applied
-      if ( _tagsActive || popcornOptions.tags || ( !popcornOptions.tags && !popcornOptions.photosetId ) ) {
-        tagHandler();
-      } else {
-        galleryHandler();
-      }
-
-      calcImageTime();
-    }
-
     function singleImageHandler() {
-      _galleryActive = _tagsActive = _flickrActive = false;
-
-      if ( !_singleActive && !_inSetup ) {
-        _singleActive = true;
+      if ( !_inSetup ) {
         _trackEvent.update({
-          src: _cachedValues.src.data,
-          linkSrc: _cachedValues.linkSrc.data,
-          tags: "",
-          photosetId: ""
+          src: _cachedValues.src.data
         });
       }
 
       if ( isDataURI( _trackEvent.popcornOptions.src ) ) {
         _urlInput.value = "data:image";
-      }
-
-      if ( _singleImageTab.classList.contains( "display-off" ) ) {
-        toggleTabs();
-        _imageToggler.value = "image-single";
       }
     }
 
@@ -211,8 +101,6 @@
             src = te.popcornTrackEvent.src;
           }
 
-          _dropArea.querySelector( "img" ).src = _cachedValues.src.data = src;
-
           updateTrackEvent( te, {
             src: src,
             tags: "",
@@ -220,86 +108,8 @@
           });
         });
 
-        _this.attachInputChangeHandler( _titleInput, trackEvent, "title", updateTrackEvent );
-
-        _this.createTooltip( _linkInput, {
-          name: "image-link-tooltip" + Date.now(),
-          element: _linkInput.parentElement,
-          message: "Links will be clickable when shared.",
-          top: "105%",
-          left: "50%",
-          hidden: true,
-          hover: false
-        });
-
-        _this.attachInputChangeHandler( _linkInput, trackEvent, "linkSrc", function( te, prop ) {
-          if ( prop.linkSrc.match( _urlRegex ) ) {
-            _cachedValues.linkSrc.data = prop.linkSrc;
-
-            updateTrackEvent( te, {
-              linkSrc: prop.linkSrc
-            });
-          } else if ( prop.linkSrc !== "" ) {
-            _this.setErrorState( "Not a valid URL" );
-          } else {
-            updateTrackEvent( te, {
-              linkSrc: ""
-            });
-          }
-        });
-
-        _this.attachInputChangeHandler( _galleryInput, trackEvent, "photosetId", function( te, prop ) {
-          if ( isEmptyInput( prop.photosetId ) ) {
-            return;
-          }
-
-          _cachedValues.photosetId.data = prop.photosetId;
-
-          updateTrackEvent( te, {
-            src: "",
-            linkSrc: "",
-            tags: "",
-            photosetId: prop.photosetId
-          });
-        });
-
-        _this.attachInputChangeHandler( _tagInput, trackEvent, "tags", function( te, prop ) {
-          if ( isEmptyInput( prop.tags ) ) {
-            return;
-          }
-
-          _cachedValues.tags.data = prop.tags;
-
-          updateTrackEvent( te, {
-            src: "",
-            linkSrc: "",
-            tags: prop.tags,
-            photosetId: ""
-          });
-        });
-
-        _this.attachInputChangeHandler( _countInput, trackEvent, "count", function( te, prop ) {
-          var count = prop.count > 0 ? prop.count : 1;
-
-          if ( isEmptyInput( prop.count ) ) {
-            return;
-          }
-
-          _cachedValues.count.data = count;
-
-          updateTrackEvent( te, {
-            count: count
-          });
-        });
-
         // Wrap specific input elements
         _this.wrapTextInputElement( _urlInput );
-        _this.wrapTextInputElement( _titleInput );
-        _this.wrapTextInputElement( _linkInput );
-        _this.wrapTextInputElement( _galleryInput );
-
-        _tagRadio.addEventListener( "click", tagHandler );
-        _galleryRadio.addEventListener( "click", galleryHandler );
 
         attachDropHandlers();
       }
@@ -311,7 +121,7 @@
         trackEvent: trackEvent,
         callback: callback,
         basicContainer: container,
-        manifestKeys: [ "transition" ]
+        manifestKeys: []
       });
 
       attachHandlers();
@@ -319,28 +129,13 @@
       _this.updatePropertiesFromManifest( trackEvent );
       _this.setTrackEventUpdateErrorCallback( _this.setErrorState );
 
-      if ( trackEvent.popcornOptions.src ) {
-        _singleActive = true;
-        singleImageHandler();
-        displayCachedValues( "single" );
-      } else {
-        flickrHandler();
-        displayCachedValues( "flickr" );
-      }
+      singleImageHandler();
 
       _this.scrollbar.update();
       _inSetup = false;
     }
 
     function toggleHandler( e ) {
-      toggleTabs();
-
-      if ( e.target.value === "image-single" ) {
-        singleImageHandler();
-      } else {
-        flickrHandler();
-      }
-
       _this.scrollbar.update();
     }
 
@@ -350,7 +145,6 @@
 
     function onTrackEventUpdated( e ) {
       _trackEvent = e.target;
-      calcImageTime();
       _this.updatePropertiesFromManifest( _trackEvent );
       _this.setErrorState( false );
 
@@ -373,16 +167,7 @@
         _cachedValues.src.data = src;
       }
 
-      // Ensure right group is displayed
-      // Mode is flipped here to ensure cached values aren't placed right back in after updating
-      if ( src && !_flickrActive ) {
-        singleImageHandler();
-        displayCachedValues( "flickr" );
-      } else if ( _flickrActive ) {
-        flickrHandler();
-        displayCachedValues( "single" );
-      }
-
+      singleImageHandler();
       _this.scrollbar.update();
     }
 
@@ -396,59 +181,22 @@
             src: {
               data: popcornOptions.src || manifestOpts.src.default,
               type: "single"
-            },
-            linkSrc: {
-              data: popcornOptions.linkSrc,
-              type: "single"
-            },
-            tags: {
-              data: popcornOptions.tags || manifestOpts.tags.default,
-              type: "flickr"
-            },
-            photosetId: {
-              data: popcornOptions.photosetId || manifestOpts.photosetId.default,
-              type: "flickr"
-            },
-            count: {
-              data: popcornOptions.count,
-              type: "flickr"
             }
           };
         }
 
         _popcornInstance = trackEvent.track._media.popcorn.popcorn;
-        _imageToggler.addEventListener( "change", toggleHandler );
 
         _this.applyExtraHeadTags( compiledLayout );
         _trackEvent = trackEvent;
-        _dropArea.querySelector( "img" ).src = _trackEvent.popcornOptions.src;
-
-        // The current popcorn instance
-        _popcornInstance.on( "invalid-flickr-image", function() {
-          _this.setErrorState( "Invalid Flicker Gallery URL" );
-        });
-
-        _popcornInstance.on( "popcorn-image-count-update", function( count ) {
-          _trackEvent.popcornOptions.count = count;
-          _cachedValues.count.data = count;
-          _countInput.value = count;
-        });
-
-        _popcornInstance.on( "popcorn-image-failed-retrieve", function() {
-          _this.setErrorState( "No Images" );
-        });
 
         _trackEvent.listen( "trackeventupdated", onTrackEventUpdated );
 
         setup( trackEvent );
       },
       close: function() {
-        _imageToggler.removeEventListener( "change", toggleHandler, false );
         _this.removeExtraHeadTags();
         butter.unlisten( "droppable-unsupported", unSupported );
-        butter.unlisten( "droppable-upload-failed", failedUpload );
-        butter.unlisten( "droppable-succeeded", uploadSuceeded );
-        _popcornInstance.off( "invalid-flickr-image" );
         _trackEvent.unlisten( "trackeventupdated", onTrackEventUpdated );
       }
     });
