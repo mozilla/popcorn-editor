@@ -169,8 +169,20 @@ window.Butter = {
 
           track = track || _currentMedia.addTrack();
 
-          if ( track.findOverlappingTrackEvent( start, end ) ) {
-            track = _currentMedia.insertTrackBefore( track );
+          var overlappingTrackEvent = track.findOverlappingTrackEvent( start, end );
+          var i = 0;
+          while ( overlappingTrackEvent && i < 10 ) {
+            ++i;
+            if ( _currentMedia.tracks.length < _config.value( "maxTracks" ) ) {
+              track = _currentMedia.insertTrackBefore( track );
+              break;
+            }
+            else {
+              // Move the trackevent along until there is free space...
+              end = overlappingTrackEvent.popcornOptions.end + (end - start);
+              start = overlappingTrackEvent.popcornOptions.end;
+              overlappingTrackEvent = track.findOverlappingTrackEvent( start, end )
+            }
           }
 
           popcornOptions.start = start;

@@ -19,6 +19,7 @@
   "trackEvent": {
     "defaultDuration": 5
   },
+  "maxTracks": 4,
   "plugin": {
     "plugins": [
       {

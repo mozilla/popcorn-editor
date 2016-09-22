@@ -11149,6 +11149,14 @@ html[dir="ltr"] .media-status-container .add-track {
   margin-left: 10px;
   line-height: 20px;
   outline: none;
+
+  &[disabled] {
+    cursor: not-allowed;
+    color: rgb(185, 185, 185);
+    &:hover {
+      background-color: rgb(244, 245, 245);
+    }
+  }
 }
 html[dir="ltr"] .time-bar {
   position: absolute;
@@ -11409,6 +11417,14 @@ html[dir="rtl"] .media-status-container .add-track {
   margin-right: 10px;
   line-height: 20px;
   outline: none;
+
+  &[disabled] {
+    cursor: not-allowed;
+    color: rgb(185, 185, 185);
+    &:hover {
+      background-color: rgb(244, 245, 245);
+    }
+  }
 }
 html[dir="rtl"] .time-bar {
   position: absolute;
