@@ -50,8 +50,7 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "util/xhr", "even
         // Interval for backups, starts first time user clicks Save.
         _backupInterval = -1,
 
-        _thumbnail = location.protocol + "//" + location.host + basedir + "/resources/icons/fb-logo.png",
-        _background = "#FFFFFF";
+        _thumbnail = location.protocol + "//" + location.host + basedir + "/resources/icons/fb-logo.png";
 
     function invalidate() {
       // Project is dirty, needs save, backup
@@ -130,20 +129,6 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "util/xhr", "even
         },
         enumerable: true
        },
-
-      "background": {
-        set: function( val ) {
-          if ( val !== _background ) {
-            _background = val;
-            _video.style.background = _background;
-            invalidate();
-          }
-        },
-        get: function() {
-          return _background;
-        },
-        enumerable: true
-      },
 
       "tags": {
         set: function( val ) {
@@ -250,7 +235,6 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "util/xhr", "even
 
       startBackups();
       _video = document.getElementById( "video" );
-      _video.style.background = _background;
 
       // Listen for changes in the project data so we know when to save.
       [ "mediaclipadded",
@@ -335,10 +319,6 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "util/xhr", "even
 
       if ( json.thumbnail ) {
         _thumbnail = json.thumbnail;
-      }
-
-      if ( json.background ) {
-        _background = json.background;
       }
 
       if ( json.publishUrl ) {
@@ -456,7 +436,6 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "util/xhr", "even
       data.description = _description;
       data.tags = _this.tags;
       data.thumbnail = _thumbnail;
-      data.background = _background;
       data.backupDate = Date.now();
       data.useBackup = false;
       setData( data, function( error ) {
@@ -506,7 +485,6 @@ define( [ "core/eventmanager", "core/media", "util/sanitizer", "util/xhr", "even
           author: 'TODO',
           description: _description,
           thumbnail: _thumbnail,
-          background: _background,
           data: _this.data,
           tags: _this.tags,
           remixedFrom: _remixedFrom,
