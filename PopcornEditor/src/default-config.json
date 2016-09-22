@@ -31,20 +31,6 @@
         "icon": "./src/plugins/image/image-icon.png"
       },
       {
-        "type": "loopPlugin",
-        "displayName": "loop",
-        "icon": "./src/plugins/loopPlugin/loop-icon.png"
-      },
-      {
-        "type": "skip",
-        "icon": "./src/plugins/skip/skip-icon.png"
-      },
-      {
-        "type": "pausePlugin",
-        "displayName": "Pause",
-        "icon": "./src/plugins/pausePlugin/pause-icon.png"
-      },
-      {
         "type": "sequencer",
         "hidden": true,
         "icon": "./resources/icons/media.png"
