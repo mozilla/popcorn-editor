@@ -754,6 +754,15 @@ function init() {
 
 document.addEventListener( "DOMContentLoaded", function() {
   // Source tree case vs. require-built case.
+  
+  // if a user comes to                 http://archive.org/pop
+  // we need to auto-redirect them to  https://archive.org/pop
+  // due to CORS issues, etc.
+  if ( location.href.match(/^http:\/\/(.*)archive.org\/pop\//) ){
+    location.href = location.href.replace(/^http:\/\//, 'https://');
+    return;
+  }
+  
   if ( typeof require === "undefined" ) {
     var rscript = document.createElement( "script" );
     rscript.onload = function() {
