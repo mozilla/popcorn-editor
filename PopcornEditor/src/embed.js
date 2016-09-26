@@ -481,7 +481,7 @@ function init() {
       function preprocess(json, callback) {
         if (!json || !json.media) return callback(json);
 
-        var id = config.savedDataUrl.split('/').pop();
+        var id = config.savedDataUrl.split('=').pop();
         var url = "https://archive.org/download/" + id + "/" + id + ".mp4"
         var thumb = "https://archive.org/download/" + id + "/format=Thumbnail";
 
