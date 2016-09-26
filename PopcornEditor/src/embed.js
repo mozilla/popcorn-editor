@@ -479,10 +479,11 @@ function init() {
       window.addEventListener( "resize", resizeHandler.resize );
 
       function preprocess(json, callback) {
-        if (!video) return callback(json);
+        if (!json || !json.media) return callback(json);
 
         var id = config.savedDataUrl.split('/').pop();
-        var url = "_test_/" + id + ".mp4";
+        var url = "https://archive.org/download/" + id + "/" + id + ".mp4"
+        var thumb = "https://archive.org/download/" + id + "/format=Thumbnail";
 
         jQuery.ajax({
           type: "HEAD",
@@ -522,6 +523,40 @@ function init() {
                             "name": "PPAP0"
                         }
                     ]
+                }, {
+                  "name": "",
+                  "id": "1",
+                  "order": 1,
+                  "trackEvents": [
+                      {
+                          "id": "PPAP1",
+                          "type": "image",
+                          "popcornOptions": {
+                            "start": 0,
+                              "end": 0.2,
+                              "target": "video-container",
+                              "src": thumb,
+                              "linkSrc": "",
+                              "tags": "",
+                              "photosetId": "",
+                              "count": 3,
+                              "width": 100,
+                              "height": 100,
+                              "top": 0,
+                              "left": 0,
+                              "innerTop": 0,
+                              "innerLeft": 0,
+                              "innerWidth": 0,
+                              "innerHeight": 0,
+                              "title": "",
+                              "transition": "popcorn-fade",
+                              "zindex": 990,
+                              "id": "PPAP1"
+                          },
+                          "track": "1",
+                          "name": "PPAP1"
+                      }
+                  ]
                 }];
           callback(json);
         }).error(function(jqXHR, textStatus, errorThrown) {
