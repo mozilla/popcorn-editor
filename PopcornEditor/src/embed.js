@@ -478,10 +478,60 @@ function init() {
       resizeHandler.resize();
       window.addEventListener( "resize", resizeHandler.resize );
 
+      function preprocess(json, callback) {
+        if (!video) return callback(json);
+
+        var id = config.savedDataUrl.split('/').pop();
+        var url = "_test_/" + id + ".mp4";
+
+        jQuery.ajax({
+          type: "HEAD",
+          async: true,
+          url: url,
+        }).done(function(message, text, jqXHR) {
+          json.media[0].tracks = [{
+                    "name": "",
+                    "id": "0",
+                    "order": 0,
+                    "trackEvents": [
+                        {
+                            "id": "PPAP",
+                            "type": "sequencer",
+                            "popcornOptions": {
+                                "source": [ url ],
+                                "start": 0,
+                                "end": json.media[0].duration,
+                                "from": 0,
+                                "duration": json.media[0].duration,
+                                "target": "video-container",
+                                "fallback": [ "" ],
+                                "zindex": 997,
+                                "id": "PPAP",
+                                "width": 100,
+                                "height": 100,
+                                "top": 0,
+                                "left": 0,
+                                "volume": 100,
+                                "hidden": false,
+                                "mute": false,
+                                "contentType": "",
+                                "type": "",
+                                "denied": false
+                            },
+                            "track": "0",
+                            "name": "PPAP0"
+                        }
+                    ]
+                }];
+          callback(json);
+        }).error(function(jqXHR, textStatus, errorThrown) {
+          callback(json);
+        });
+      }
 
       // parse the savedDataUrl (to JSON) and then invoke the 2nd param (closure / anonymous function)
       // with the parsed project JSON
-      Project.load( config.savedDataUrl, function( json ){
+      Project.load( config.savedDataUrl, function(json) { preprocess(json, function(json) {
         Controls.create( "controls", {
           onShareClick: function() {
             shareClick( popcorn );
@@ -691,7 +741,7 @@ function init() {
           embedInfo.parentNode.removeChild( embedInfo );
         }
 
-      }); // end Project.load() call
+      })}); // end Project.load() call
 
 
 
@@ -754,7 +804,7 @@ function init() {
 
 document.addEventListener( "DOMContentLoaded", function() {
   // Source tree case vs. require-built case.
-  
+
   // if a user comes to                 http://archive.org/pop
   // we need to auto-redirect them to  https://archive.org/pop
   // due to CORS issues, etc.
@@ -762,7 +812,7 @@ document.addEventListener( "DOMContentLoaded", function() {
     location.href = location.href.replace(/^http:\/\//, 'https://');
     return;
   }
-  
+
   if ( typeof require === "undefined" ) {
     var rscript = document.createElement( "script" );
     rscript.onload = function() {
