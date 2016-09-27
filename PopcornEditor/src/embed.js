@@ -480,6 +480,7 @@ function init() {
 
       function preprocess(json, callback) {
         if (!json || !json.media) return callback(json);
+        if (!config.savedDataUrl.startsWith('https://archive.org')) return callback(json);
 
         var id = config.savedDataUrl.split('=').pop();
         var url = "https://archive.org/download/" + id + "/" + id + ".mp4"
