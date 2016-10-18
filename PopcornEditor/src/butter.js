@@ -942,27 +942,30 @@ window.Butter = {
 
           // if it looks like a single full media reference, use that
           // else split up multiple media pieces from archive.org
-          if (initialMediaSource.match(/https*:\/\//)){
+          if (initialMediaSource.match(/https*:\/\//)) {
             initialMediaList = [initialMediaSource];
-          }
-          else{
-            $(initialMediaSource.split(',')).each(function(idx, initialMediaSource){
-              if (!initialMediaSource.match(/https*:\/\//)){
+          } else {
+            var base = 'https://archive.org/details/';
+            if (qs.base) base = decodeURIComponent(qs.base);
+
+            $(initialMediaSource.split(',')).each(function(idx, initialMediaSource) {
+              if (!initialMediaSource.match(/https*:\/\//)) {
                 var mat;
                 var post='';
+
                 // look for media start/end suffix patterns
-                if ((mat = initialMediaSource.match(/\/t=([\d\.]+)\/([\d\.]+)$/))){
+                if ((mat = initialMediaSource.match(/\/t=([\d\.]+)\/([\d\.]+)$/))) {
                   post += '?start='+mat[1]+'&end='+mat[2];
                   initialMediaSource = initialMediaSource.replace(/\/t=([\d\.]+)\/([\d\.]+)$/,'');
-                }
-                // look for media start suffix patterns
-                else if ((mat = initialMediaSource.match(/\/t=([\d\.]+)$/))){
+
+                  // look for media start suffix patterns
+                } else if ((mat = initialMediaSource.match(/\/t=([\d\.]+)$/))){
                   post += '?start='+mat[1];
                   initialMediaSource = initialMediaSource.replace(/\/t=([\d\.]+)$/,'');
                 }
 
                 // now expand the "short" source version to the full version
-                initialMediaSource = 'https://archive.org/details/' + initialMediaSource + post;
+                initialMediaSource = base + initialMediaSource + post;
               }
 
               _logger.log('ADDING initialMediaSource: '+initialMediaSource);
