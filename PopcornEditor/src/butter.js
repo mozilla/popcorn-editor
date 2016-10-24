@@ -942,7 +942,7 @@ window.Butter = {
 
           // if it looks like a single full media reference, use that
           // else split up multiple media pieces from archive.org
-          if (initialMediaSource.match(/https*:\/\//)) {
+          if (initialMediaSource.match(/^https*:\/\//)) {
             initialMediaList = [initialMediaSource];
           } else {
             var base = 'https://archive.org/details/';
