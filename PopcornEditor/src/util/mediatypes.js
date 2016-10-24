@@ -408,13 +408,15 @@ define( [ "util/uri", "util/xhr", "json!../../api/butterconfig", "jquery" ],
           thumbnail: URI.makeUnique( encodedBaseUrl ).toString()
         };
 
-        Popcorn.getJSONP( nodeHubbleEndpoint + "/mime/" + baseUrl, function( resp ) {
-          var contentType = resp.contentType;
+        console.log(baseUrl);
+        // Popcorn.getJSONP( nodeHubbleEndpoint + "/mime/" + baseUrl, function( resp ) {
+          // var contentType = resp.contentType;
+          var contentType = "video/mp4";
 
-          if ( resp.error || !contentType ) {
-            return errorCallback( EMBED_UNPLAYABLE );
-          }
-          successOptions.contentType = errorOptions.contentType = contentType;
+          // if ( resp.error || !contentType ) {
+          //   return errorCallback( EMBED_UNPLAYABLE );
+          // }
+          successOptions.contentType = errorOptions.contentType =  contentType;
 
           if ( contentType.indexOf( "video" ) === 0 || contentType.indexOf( "application/octet-stream" ) === 0 ) {
             mediaElem = document.createElement( "video" );
@@ -445,7 +447,7 @@ define( [ "util/uri", "util/xhr", "json!../../api/butterconfig", "jquery" ],
           } else {
             errorCallback( EMBED_UNPLAYABLE );
           }
-        });
+        // });
       }
     }
   };
