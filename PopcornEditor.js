@@ -10,9 +10,30 @@ function PopcornEditor() {
 
   this.init = function (el, url) {
     var editor = (typeof el === 'string') ? document.getElementById(el) : el,
-        url = url || 'PopcornEditor/editor.html';
+        url = url || 'PopcornEditor/editor.html',
+        loadingDiv = null,
+        loadingSpinner = null;
 
     window.addEventListener('message', onmessage);
+    this.listen('loaded', function () {
+      document.querySelector('#loading').remove();
+    });
+
+    loadingDiv = document.createElement('div');
+    loadingDiv.setAttribute('id', 'loading');
+    loadingDiv.style.width = '100%';
+    loadingDiv.style.height = '100%';
+    loadingDiv.style.backgroundColor = 'white';
+    loadingDiv.style.display = 'flex';
+    loadingDiv.style.justifyContent = 'center';
+
+    loadingSpinner = document.createElement('img');
+    loadingSpinner.setAttribute('class', 'loading-spinner');
+    loadingSpinner.setAttribute('src', 'PopcornEditor/resources/ring-alt.svg');
+    loadingSpinner.style.width = '30%';
+
+    loadingDiv.appendChild(loadingSpinner);
+    editor.appendChild(loadingDiv);
 
     this.iframe = document.createElement('iframe'),
 
